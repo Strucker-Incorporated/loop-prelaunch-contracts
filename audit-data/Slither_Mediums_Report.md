@@ -1,30 +1,7 @@
-Summary
- - [divide-before-multiply](#divide-before-multiply) (8 results) (Medium)
- - [locked-ether](#locked-ether) (1 results) (Medium)
- - [reentrancy-no-eth](#reentrancy-no-eth) (1 results) (Medium)
+## Summary
  - [uninitialized-local](#uninitialized-local) (3 results) (Medium)
  - [unused-return](#unused-return) (5 results) (Medium)
 
-## reentrancy-no-eth
-Impact: Medium
-Confidence: Medium
- - [ ] ID-9
-Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L336-L352):
-	External calls:
-	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L342)
-	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L343)
-	State variables written after the call(s):
-	- [startClaimDate = uint32(block.timestamp)](src/PrelaunchPoints.sol#L349)
-	[PrelaunchPoints.startClaimDate](src/PrelaunchPoints.sol#L47) can be used in cross function reentrancies:
-	- [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L177-L206)
-	- [PrelaunchPoints.claim(address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L219-L229)
-	- [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L240-L255)
-	- [PrelaunchPoints.constructor(address,address,address[])](src/PrelaunchPoints.sol#L102-L119)
-	- [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L336-L352)
-	- [PrelaunchPoints.startClaimDate](src/PrelaunchPoints.sol#L47)
-	- [PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L306-L328)
-
-src/PrelaunchPoints.sol#L336-L352
 
 
 ## uninitialized-local
