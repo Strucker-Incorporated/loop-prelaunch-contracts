@@ -3,6 +3,7 @@ Summary
  - [reentrancy-benign](#reentrancy-benign) (3 results) (Low)
  - [reentrancy-events](#reentrancy-events) (7 results) (Low)
  - [timestamp](#timestamp) (2 results) (Low)
+ 
 ## missing-zero-check
 Impact: Low
 Confidence: Medium
@@ -120,30 +121,7 @@ Reentrancy in [PrelaunchPoints.recoverERC20(address,uint256)](src/PrelaunchPoint
 
 src/PrelaunchPoints.sol#L416-L423
 
-
- - [ ] ID-10
-Reentrancy in [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L240-L255):
-	External calls:
-	- [claimedAmount = _claim(_token,address(this),_percentage,_exchange,_data)](src/PrelaunchPoints.sol#L250)
-		- [returndata = address(token).functionCall(data)](lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol#L96)
-		- [! _sellToken.approve(exchangeProxy,_amount)](src/PrelaunchPoints.sol#L534)
-		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L538)
-		- [(success,returndata) = target.call{value: value}(data)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L87)
-		- [lpETH.safeTransfer(_receiver,claimedAmount)](src/PrelaunchPoints.sol#L281)
-		- [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L294)
-		- [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L295)
-	- [lpETH.approve(address(lpETHVault),claimedAmount)](src/PrelaunchPoints.sol#L251)
-	- [lpETHVault.stake(claimedAmount,msg.sender,_typeIndex)](src/PrelaunchPoints.sol#L252)
-	External calls sending eth:
-	- [claimedAmount = _claim(_token,address(this),_percentage,_exchange,_data)](src/PrelaunchPoints.sol#L250)
-		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L538)
-		- [(success,returndata) = target.call{value: value}(data)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L87)
-	Event emitted after the call(s):
-	- [StakedVault(msg.sender,claimedAmount,_typeIndex)](src/PrelaunchPoints.sol#L254)
-
-src/PrelaunchPoints.sol#L240-L255
-
-
+ 
  - [ ] ID-11
 Reentrancy in [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L177-L206):
 	External calls:
