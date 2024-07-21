@@ -138,6 +138,123 @@ then analyze the low risks if one or some of them can be explained and fortified
      ```
    - **Real-World Example**:
      - **DAO Hack** (2016): Highlighted how ignoring the outcomes of critical operations can lead to significant losses. The failure to properly handle transaction outcomes contributed to the exploit that drained funds from the DAO.
+To elevate the "Unsafe ERC20 Operations" from low to medium risk, let's build out more detailed Proofs of Concept (PoCs) that illustrate their impact on functionality and security. These PoCs will help to showcase how ignoring the return values of ERC20 operations could lead to significant issues in the contract.
+
+### Unsafe ERC20 Operations (`unsafe-erc20-operations`)
+
+- **Description**: Lack of checks for ERC20 operations which could fail silently.
+- **Files and Lines**:
+  - `src/PrelaunchPoints.sol` [Line: 235](src/PrelaunchPoints.sol#L235)
+    ```javascript
+    lpETH.approve(address(lpETHVault), claimedAmount);
+    ```
+  - `src/PrelaunchPoints.sol` [Line: 272](src/PrelaunchPoints.sol#L272)
+    ```javascript
+    WETH.approve(address(lpETH), claimedAmount);
+    ```
+  - `src/PrelaunchPoints.sol` [Line: 320](src/PrelaunchPoints.sol#L320)
+    ```javascript
+    WETH.approve(address(lpETH), totalSupply);
+    ```
+  - `src/PrelaunchPoints.sol` [Line: 508](src/PrelaunchPoints.sol#L508)
+    ```javascript
+    if (!_sellToken.approve(exchangeProxy, _amount)) {
+    ```
+
+- **Impact**: 
+  - Ignoring return values from `approve` calls can result in unexpected behavior or failed transactions if the approval fails, impacting contract functionality and leading to potential financial losses or disruptions.
+
+- **Mitigation**: 
+  - Ensure that `approve` calls handle the returned boolean value properly and include appropriate error handling to address failures.
+
+- **PoC**: Show potential failure in ERC20 operations due to unverified `approve` calls.
+
+#### Proof of Concept for Unsafe ERC20 Operations
+
+1. **Contract with Unsafe ERC20 Operations**
+
+   This contract demonstrates how ignoring the return values of `approve` calls can lead to failed token transfers, which can disrupt the intended functionality.
+
+   ```solidity
+   // SPDX-License-Identifier: MIT
+   pragma solidity ^0.8.0;
+
+   interface ERC20 {
+       function approve(address spender, uint256 amount) external returns (bool);
+   }
+
+   contract TestERC20Operations {
+       ERC20 public token;
+       address public spender;
+
+       constructor(address _token, address _spender) {
+           token = ERC20(_token);
+           spender = _spender;
+       }
+
+       function testApprove() external {
+           uint256 amount = 100;
+
+           // Ignoring the return value of approve, leading to potential silent failure
+           token.approve(spender, amount);
+       }
+   }
+   ```
+
+2. **Malicious Contract to Exploit the Issue**
+
+   This malicious contract will try to exploit the `TestERC20Operations` contract by assuming that approvals are successful, which might not be the case if the return values are ignored.
+
+   ```solidity
+   // SPDX-License-Identifier: MIT
+   pragma solidity ^0.8.0;
+
+   interface TestERC20Operations {
+       function testApprove() external;
+   }
+
+   contract ExploitContract {
+       TestERC20Operations public target;
+
+       constructor(address _target) {
+           target = TestERC20Operations(_target);
+       }
+
+       function exploit() external {
+           // Call the function that has unsafe ERC20 operations
+           target.testApprove();
+
+           // Here, we can try to perform actions that assume approval was successful
+           // If the approval failed silently, these actions will fail
+       }
+   }
+   ```
+
+   **Explanation**:
+   - The `TestERC20Operations` contract calls `approve` on an ERC20 token but ignores the return value.
+   - The `ExploitContract` assumes that the approval was successful and attempts to perform actions based on that assumption.
+   - If the approval failed silently, these subsequent actions will fail, demonstrating the impact of not handling return values properly.
+
+3. **Testing Scenario**
+
+   - Deploy the `ERC20` token contract with an appropriate `approve` method that fails under certain conditions.
+   - Deploy the `TestERC20Operations` contract with this token and an address for the spender.
+   - Deploy the `ExploitContract` with the address of the `TestERC20Operations` contract.
+   - Call the `exploit` function from the `ExploitContract` to observe the failure of subsequent actions.
+
+4. **Mitigation**
+
+   - Modify the `TestERC20Operations` contract to handle the return value of `approve`:
+
+     ```solidity
+     function testApprove() external {
+         uint256 amount = 100;
+         require(token.approve(spender, amount), "Approval failed");
+     }
+     ```
+
+   - This ensures that the contract checks whether the approval succeeded and handles errors appropriately.
+
 
 ## Low-Risk Issues
 
@@ -222,61 +339,6 @@ then analyze the low risks if one or some of them can be explained and fortified
    - **High-Level Abstractions**: Prefer using high-level functions and abstractions that provide built-in safety checks.
    - **Validation**: Validate all inputs and the success of external calls thoroughly.
    - **Reentrancy Guard**: Implement reentrancy guards to prevent reentrant attacks.
-
-### Unsafe ERC20 Operations (`unsafe-erc20-operations`)
-
-- **Description**: Lack of checks for ERC20 operations which could fail silently.
-- **Files and Lines**:
-  - `src/PrelaunchPoints.sol` [Line: 235](src/PrelaunchPoints.sol#L235)
-    ```javascript
-    lpETH.approve(address(lpETHVault), claimedAmount);
-    ```
-    *Explanation*: The `approve` method of ERC20 tokens returns a boolean indicating success. If the approval fails, the transaction will not revert, which can lead to unexpected behaviors if the approval was not successful.
-
-  - `src/PrelaunchPoints.sol` [Line: 272](src/PrelaunchPoints.sol#L272)
-    ```javascript
-    WETH.approve(address(lpETH), claimedAmount);
-    ```
-    *Explanation*: Similar to the previous case, this `approve` operation might fail silently if the approval was unsuccessful.
-
-  - `src/PrelaunchPoints.sol` [Line: 320](src/PrelaunchPoints.sol#L320)
-    ```javascript
-    WETH.approve(address(lpETH), totalSupply);
-    ```
-    *Explanation*: Again, the `approve` method should be checked to ensure that it succeeds to avoid issues with token transfers.
-
-  - `src/PrelaunchPoints.sol` [Line: 508](src/PrelaunchPoints.sol#L508)
-    ```javascript
-    if (!_sellToken.approve(exchangeProxy, _amount)) {
-    ```
-    *Explanation*: Failure to handle the result of `approve` here could lead to potential issues with token transactions if the approval fails.
-
-- **Impact**: 
-  - Failure of `approve` calls can result in unexpected behavior or failed transactions, which might not be immediately noticeable.
-- **Mitigation**: 
-  - Ensure that `approve` calls check for success by handling the returned boolean value appropriately.
-- **PoC**: Demonstrate potential failure in ERC20 operations due to unverified `approve` calls.
-  ```javascript
-  // Contract demonstrating unsafe ERC20 operations
-  contract TestERC20Operations {
-      ERC20 public token;
-      address public spender;
-
-      constructor(address _token, address _spender) {
-          token = ERC20(_token);
-          spender = _spender;
-      }
-
-      function testApprove() external {
-          uint256 amount = 100;
-          // Potentially failing `approve` call
-          token.approve(spender, amount);
-          // No validation if approval was successful
-      }
-  }
-  ```
-
-
 
 ### Missing Zero-Checks (`missing-zero-check`)
 
