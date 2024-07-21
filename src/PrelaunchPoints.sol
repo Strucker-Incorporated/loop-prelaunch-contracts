@@ -54,16 +54,29 @@ contract PrelaunchPoints {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event Locked(address indexed user, uint256 amount, address indexed token, bytes32 indexed referral);
+    event Locked(
+        address indexed user,
+        uint256 amount,
+        address indexed token,
+        bytes32 indexed referral
+    );
     event StakedVault(address indexed user, uint256 amount, uint256 typeIndex);
     event Converted(uint256 amountETH, uint256 amountlpETH);
-    event Withdrawn(address indexed user, address indexed token, uint256 amount);
+    event Withdrawn(
+        address indexed user,
+        address indexed token,
+        uint256 amount
+    );
     event Claimed(address indexed user, address indexed token, uint256 reward);
     event Recovered(address token, uint256 amount);
     event OwnerProposed(address newOwner);
     event OwnerUpdated(address newOwner);
     event LoopAddressesUpdated(address loopAddress, address vaultAddress);
-    event SwappedTokens(address sellToken, uint256 sellAmount, uint256 buyETHAmount);
+    event SwappedTokens(
+        address sellToken,
+        uint256 sellAmount,
+        uint256 buyETHAmount
+    );
 
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
@@ -99,7 +112,11 @@ contract PrelaunchPoints {
      * @param _exchangeProxy address of the 0x protocol exchange proxy
      * @param _allowedTokens list of token addresses to allow for locking
      */
-    constructor(address _exchangeProxy, address _wethAddress, address[] memory _allowedTokens) {
+    constructor(
+        address _exchangeProxy,
+        address _wethAddress,
+        address[] memory _allowedTokens
+    ) {
         owner = msg.sender;
         exchangeProxy = _exchangeProxy;
         WETH = IWETH(_wethAddress);
@@ -109,7 +126,7 @@ contract PrelaunchPoints {
 
         // Allow intital list of tokens
         uint256 length = _allowedTokens.length;
-        for (uint256 i = 0; i < length;) {
+        for (uint256 i = 0; i < length; ) {
             isTokenAllowed[_allowedTokens[i]] = true;
             unchecked {
                 i++;
@@ -159,7 +176,12 @@ contract PrelaunchPoints {
      * @param _for       address for which ETH is locked
      * @param _referral  info of the referral. This value will be processed in the backend.
      */
-    function lockFor(address _token, uint256 _amount, address _for, bytes32 _referral) external {
+    function lockFor(
+        address _token,
+        uint256 _amount,
+        address _for,
+        bytes32 _referral
+    ) external {
         if (_token == ETH) {
             revert InvalidToken();
         }
@@ -174,10 +196,12 @@ contract PrelaunchPoints {
      * @param _receiver    Address of user who will receive the stake
      * @param _referral    Address of the referral user
      */
-    function _processLock(address _token, uint256 _amount, address _receiver, bytes32 _referral)
-        internal
-        onlyBeforeDate(startClaimDate)
-    {
+    function _processLock(
+        address _token,
+        uint256 _amount,
+        address _receiver,
+        bytes32 _referral
+    ) internal onlyBeforeDate(startClaimDate) {
         if (_amount == 0) {
             revert CannotLockZero();
         }
@@ -193,7 +217,7 @@ contract PrelaunchPoints {
 
             if (_token == address(WETH)) {
                 totalSupply += _amount;
-            } 
+            }
             balances[_receiver][_token] += _amount;
         }
 
@@ -211,10 +235,12 @@ contract PrelaunchPoints {
      * @param _exchange   Exchange identifier where the swap takes place
      * @param _data       Swap data obtained from 0x API
      */
-    function claim(address _token, uint8 _percentage, Exchange _exchange, bytes calldata _data)
-        external
-        onlyAfterDate(startClaimDate)
-    {
+    function claim(
+        address _token,
+        uint8 _percentage,
+        Exchange _exchange,
+        bytes calldata _data
+    ) external onlyAfterDate(startClaimDate) {
         _claim(_token, msg.sender, _percentage, _exchange, _data);
     }
 
@@ -227,11 +253,20 @@ contract PrelaunchPoints {
      * @param _typeIndex  lock type index determining lock period and rewards multiplier.
      * @param _data       Swap data obtained from 0x API
      */
-    function claimAndStake(address _token, uint8 _percentage, Exchange _exchange, uint256 _typeIndex, bytes calldata _data)
-        external
-        onlyAfterDate(startClaimDate)
-    {
-        uint256 claimedAmount = _claim(_token, address(this), _percentage, _exchange, _data);
+    function claimAndStake(
+        address _token,
+        uint8 _percentage,
+        Exchange _exchange,
+        uint256 _typeIndex,
+        bytes calldata _data
+    ) external onlyAfterDate(startClaimDate) {
+        uint256 claimedAmount = _claim(
+            _token,
+            address(this),
+            _percentage,
+            _exchange,
+            _data
+        );
         lpETH.approve(address(lpETHVault), claimedAmount);
         lpETHVault.stake(claimedAmount, msg.sender, _typeIndex);
 
@@ -241,10 +276,13 @@ contract PrelaunchPoints {
     /**
      * @dev Claim logic. If necessary converts token to ETH before depositing into lpETH contract.
      */
-    function _claim(address _token, address _receiver, uint8 _percentage, Exchange _exchange, bytes calldata _data)
-        internal
-        returns (uint256 claimedAmount)
-    {
+    function _claim(
+        address _token,
+        address _receiver,
+        uint8 _percentage,
+        Exchange _exchange,
+        bytes calldata _data
+    ) internal returns (uint256 claimedAmount) {
         if (_percentage == 0) {
             revert CannotClaimZero();
         }
@@ -255,11 +293,11 @@ contract PrelaunchPoints {
         if (_token == address(WETH)) {
             claimedAmount = userStake.mulDiv(totalLpETH, totalSupply);
             balances[msg.sender][_token] = 0;
-            if (_receiver != address(this)){
+            if (_receiver != address(this)) {
                 lpETH.safeTransfer(_receiver, claimedAmount);
-            }  
+            }
         } else {
-            uint256 userClaim = userStake * _percentage / 100;
+            uint256 userClaim = (userStake * _percentage) / 100;
             _validateData(_token, userClaim, _exchange, _data);
             balances[msg.sender][_token] = userStake - userClaim;
             uint256 balanceWethBefore = WETH.balanceOf(address(this));
@@ -295,7 +333,7 @@ contract PrelaunchPoints {
             revert CannotWithdrawZero();
         }
         if (_token == address(WETH)) {
-            if (block.timestamp >= startClaimDate){
+            if (block.timestamp >= startClaimDate) {
                 revert UseClaimInstead();
             }
             totalSupply -= lockedAmount;
@@ -311,7 +349,11 @@ contract PrelaunchPoints {
     /**
      * @dev Called by a owner to convert all the locked ETH to get lpETH
      */
-    function convertAllETH() external onlyAuthorized onlyBeforeDate(startClaimDate) {
+    function convertAllETH()
+        external
+        onlyAuthorized
+        onlyBeforeDate(startClaimDate)
+    {
         if (block.timestamp - loopActivation <= TIMELOCK) {
             revert LoopNotActivated();
         }
@@ -340,7 +382,7 @@ contract PrelaunchPoints {
     }
 
     /**
-     * @notice Proposed owner accepts the ownership. 
+     * @notice Proposed owner accepts the ownership.
      * Can only be called by current proposed owner.
      */
     function acceptOwnership() external {
@@ -357,11 +399,10 @@ contract PrelaunchPoints {
      * @dev Can only be set once before 120 days have passed from deployment.
      *      After that users can only withdraw ETH.
      */
-    function setLoopAddresses(address _loopAddress, address _vaultAddress)
-        external
-        onlyAuthorized
-        onlyBeforeDate(loopActivation)
-    {
+    function setLoopAddresses(
+        address _loopAddress,
+        address _vaultAddress
+    ) external onlyAuthorized onlyBeforeDate(loopActivation) {
         lpETH = ILpETH(_loopAddress);
         lpETHVault = ILpETHVault(_vaultAddress);
         loopActivation = uint32(block.timestamp);
@@ -388,7 +429,10 @@ contract PrelaunchPoints {
     /**
      * @dev Allows the owner to recover other ERC20s mistakingly sent to this contract
      */
-    function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyAuthorized {
+    function recoverERC20(
+        address tokenAddress,
+        uint256 tokenAmount
+    ) external onlyAuthorized {
         if (tokenAddress == address(lpETH) || isTokenAllowed[tokenAddress]) {
             revert NotValidToken();
         }
@@ -414,7 +458,12 @@ contract PrelaunchPoints {
      * @param _exchange  exchange identifier where the swap takes place
      * @param _data      swap data from 0x API
      */
-    function _validateData(address _token, uint256 _amount, Exchange _exchange, bytes calldata _data) internal view {
+    function _validateData(
+        address _token,
+        uint256 _amount,
+        Exchange _exchange,
+        bytes calldata _data
+    ) internal view {
         address inputToken;
         address outputToken;
         uint256 inputTokenAmount;
@@ -422,7 +471,13 @@ contract PrelaunchPoints {
         bytes4 selector;
 
         if (_exchange == Exchange.UniswapV3) {
-            (inputToken, outputToken, inputTokenAmount, recipient, selector) = _decodeUniswapV3Data(_data);
+            (
+                inputToken,
+                outputToken,
+                inputTokenAmount,
+                recipient,
+                selector
+            ) = _decodeUniswapV3Data(_data);
             if (selector != UNI_SELECTOR) {
                 revert WrongSelector(selector);
             }
@@ -431,10 +486,15 @@ contract PrelaunchPoints {
                 revert WrongDataTokens(inputToken, outputToken);
             }
             if (recipient != address(this)) {
-            revert WrongRecipient(recipient);
-        }
+                revert WrongRecipient(recipient);
+            }
         } else if (_exchange == Exchange.TransformERC20) {
-            (inputToken, outputToken, inputTokenAmount, selector) = _decodeTransformERC20Data(_data);
+            (
+                inputToken,
+                outputToken,
+                inputTokenAmount,
+                selector
+            ) = _decodeTransformERC20Data(_data);
             if (selector != TRANSFORM_SELECTOR) {
                 revert WrongSelector(selector);
             }
@@ -451,17 +511,24 @@ contract PrelaunchPoints {
         if (inputTokenAmount != _amount) {
             revert WrongDataAmount(inputTokenAmount);
         }
-        
     }
 
     /**
      * @notice Decodes the data sent from 0x API when UniswapV3 is used
      * @param _data      swap data from 0x API
      */
-    function _decodeUniswapV3Data(bytes calldata _data)
+    function _decodeUniswapV3Data(
+        bytes calldata _data
+    )
         internal
         pure
-        returns (address inputToken, address outputToken, uint256 inputTokenAmount, address recipient, bytes4 selector)
+        returns (
+            address inputToken,
+            address outputToken,
+            uint256 inputTokenAmount,
+            address recipient,
+            bytes4 selector
+        )
     {
         uint256 encodedPathLength;
         assembly {
@@ -472,7 +539,10 @@ contract PrelaunchPoints {
             recipient := calldataload(add(p, 64))
             encodedPathLength := calldataload(add(p, 96)) // Get length of encodedPath (obtained through abi.encodePacked)
             inputToken := shr(96, calldataload(add(p, 128))) // Shift to the Right with 24 zeroes (12 bytes = 96 bits) to get address
-            outputToken := shr(96, calldataload(add(p, add(encodedPathLength, 108)))) // Get last address of the hop
+            outputToken := shr(
+                96,
+                calldataload(add(p, add(encodedPathLength, 108)))
+            ) // Get last address of the hop
         }
     }
 
@@ -480,10 +550,17 @@ contract PrelaunchPoints {
      * @notice Decodes the data sent from 0x API when other exchanges are used via 0x TransformERC20 function
      * @param _data      swap data from 0x API
      */
-    function _decodeTransformERC20Data(bytes calldata _data)
+    function _decodeTransformERC20Data(
+        bytes calldata _data
+    )
         internal
         pure
-        returns (address inputToken, address outputToken, uint256 inputTokenAmount, bytes4 selector)
+        returns (
+            address inputToken,
+            address outputToken,
+            uint256 inputTokenAmount,
+            bytes4 selector
+        )
     {
         assembly {
             let p := _data.offset
@@ -501,7 +578,11 @@ contract PrelaunchPoints {
      * @param _swapCallData  The `data` field from the API response.
      */
 
-    function _fillQuote(IERC20 _sellToken, uint256 _amount, bytes calldata _swapCallData) internal {
+    function _fillQuote(
+        IERC20 _sellToken,
+        uint256 _amount,
+        bytes calldata _swapCallData
+    ) internal {
         // Track our balance of the buyToken to determine how much we've bought.
         uint256 boughtWETHAmount = WETH.balanceOf(address(this));
 
@@ -509,7 +590,7 @@ contract PrelaunchPoints {
             revert SellTokenApprovalFailed();
         }
 
-        (bool success,) = payable(exchangeProxy).call{value: 0}(_swapCallData);
+        (bool success, ) = payable(exchangeProxy).call{value: 0}(_swapCallData);
 
         if (!success) {
             revert SwapCallFailed();

@@ -11,7 +11,5 @@ interface ILpETH is IERC20 {
     function deposit(
         uint256 assets,
         address receiver
-    )
-    external
-        returns (uint256 shares);
+    ) external returns (uint256 shares);
 }
