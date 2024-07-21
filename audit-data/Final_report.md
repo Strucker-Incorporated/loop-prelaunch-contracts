@@ -1,7 +1,6 @@
-leave the Highs as they are
-then analyze the low risks if one or some of them can be explained and fortified to be a medium or mediums
 
-
+---
+# LoopFI Security Report For C4 Labs
 
 ### High-Risk Issues
 
@@ -539,4 +538,3 @@ To elevate the "Unsafe ERC20 Operations" from low to medium risk, let's build ou
   ```
 
 ---
-
