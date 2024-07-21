@@ -11,7 +11,7 @@ contract PrelaunchPointsScript is Script {
     address public constant WETH = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9; // Sepolia
     address[] public allowedTokens;
 
-    function setUp() public {}
+    function setUp() public { }
 
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");

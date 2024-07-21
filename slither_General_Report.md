@@ -20,11 +20,11 @@ Summary
 Impact: High
 Confidence: Medium
  - [ ] ID-0
-[PrelaunchPoints._fillQuote(IERC20,uint256,bytes)](src/PrelaunchPoints.sol#L504-L521) sends eth to arbitrary user
+[PrelaunchPoints._fillQuote(IERC20,uint256,bytes)](src/PrelaunchPoints.sol#L581-L602) sends eth to arbitrary user
 	Dangerous calls:
-	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
+	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
 
-src/PrelaunchPoints.sol#L504-L521
+src/PrelaunchPoints.sol#L581-L602
 
 
 ## incorrect-exp
@@ -109,278 +109,278 @@ Impact: Medium
 Confidence: High
  - [ ] ID-10
 Contract locking ether found:
-	Contract [AttackContract](src/mock/AttackContract.sol#L6-L30) has payable functions:
-	 - [AttackContract.receive()](src/mock/AttackContract.sol#L23-L29)
+	Contract [AttackContract](src/mock/AttackContract.sol#L6-L40) has payable functions:
+	 - [AttackContract.receive()](src/mock/AttackContract.sol#L28-L39)
 	But does not have a function to withdraw the ether
 
-src/mock/AttackContract.sol#L6-L30
+src/mock/AttackContract.sol#L6-L40
 
 
 ## reentrancy-no-eth
 Impact: Medium
 Confidence: Medium
  - [ ] ID-11
-Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L314-L330):
+Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372):
 	External calls:
-	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L320)
-	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L321)
+	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L362)
+	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L363)
 	State variables written after the call(s):
-	- [startClaimDate = uint32(block.timestamp)](src/PrelaunchPoints.sol#L327)
+	- [startClaimDate = uint32(block.timestamp)](src/PrelaunchPoints.sol#L369)
 	[PrelaunchPoints.startClaimDate](src/PrelaunchPoints.sol#L47) can be used in cross function reentrancies:
-	- [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L177-L201)
-	- [PrelaunchPoints.claim(address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L214-L219)
-	- [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L230-L239)
-	- [PrelaunchPoints.constructor(address,address,address[])](src/PrelaunchPoints.sol#L102-L119)
-	- [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L314-L330)
+	- [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L199-L225)
+	- [PrelaunchPoints.claim(address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L238-L245)
+	- [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L256-L274)
+	- [PrelaunchPoints.constructor(address,address,address[])](src/PrelaunchPoints.sol#L115-L136)
+	- [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372)
 	- [PrelaunchPoints.startClaimDate](src/PrelaunchPoints.sol#L47)
-	- [PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L284-L306)
+	- [PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L322-L344)
 
-src/PrelaunchPoints.sol#L314-L330
+src/PrelaunchPoints.sol#L352-L372
 
 
 ## uninitialized-local
 Impact: Medium
 Confidence: Medium
  - [ ] ID-12
-[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputTokenAmount](src/PrelaunchPoints.sol#L420) is a local variable never initialized
+[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputTokenAmount](src/PrelaunchPoints.sol#L469) is a local variable never initialized
 
-src/PrelaunchPoints.sol#L420
+src/PrelaunchPoints.sol#L469
 
 
  - [ ] ID-13
-[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).outputToken](src/PrelaunchPoints.sol#L419) is a local variable never initialized
+[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).outputToken](src/PrelaunchPoints.sol#L468) is a local variable never initialized
 
-src/PrelaunchPoints.sol#L419
+src/PrelaunchPoints.sol#L468
 
 
  - [ ] ID-14
-[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputToken](src/PrelaunchPoints.sol#L418) is a local variable never initialized
+[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputToken](src/PrelaunchPoints.sol#L467) is a local variable never initialized
 
-src/PrelaunchPoints.sol#L418
+src/PrelaunchPoints.sol#L467
 
 
 ## unused-return
 Impact: Medium
 Confidence: Medium
  - [ ] ID-15
-[PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L230-L239) ignores return value by [lpETH.approve(address(lpETHVault),claimedAmount)](src/PrelaunchPoints.sol#L235)
+[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372) ignores return value by [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L362)
 
-src/PrelaunchPoints.sol#L230-L239
+src/PrelaunchPoints.sol#L352-L372
 
 
  - [ ] ID-16
-[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L314-L330) ignores return value by [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L321)
+[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372) ignores return value by [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L363)
 
-src/PrelaunchPoints.sol#L314-L330
+src/PrelaunchPoints.sol#L352-L372
 
 
  - [ ] ID-17
-[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L314-L330) ignores return value by [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L320)
+[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L279-L314) ignores return value by [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L310)
 
-src/PrelaunchPoints.sol#L314-L330
+src/PrelaunchPoints.sol#L279-L314
 
 
  - [ ] ID-18
-[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L244-L276) ignores return value by [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L273)
+[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L279-L314) ignores return value by [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L311)
 
-src/PrelaunchPoints.sol#L244-L276
+src/PrelaunchPoints.sol#L279-L314
 
 
  - [ ] ID-19
-[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L244-L276) ignores return value by [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L272)
+[PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L256-L274) ignores return value by [lpETH.approve(address(lpETHVault),claimedAmount)](src/PrelaunchPoints.sol#L270)
 
-src/PrelaunchPoints.sol#L244-L276
+src/PrelaunchPoints.sol#L256-L274
 
 
 ## missing-zero-check
 Impact: Low
 Confidence: Medium
  - [ ] ID-20
-[PrelaunchPoints.proposeOwner(address)._owner](src/PrelaunchPoints.sol#L336) lacks a zero-check on :
-		- [proposedOwner = _owner](src/PrelaunchPoints.sol#L337)
+[PrelaunchPoints.proposeOwner(address)._owner](src/PrelaunchPoints.sol#L378) lacks a zero-check on :
+		- [proposedOwner = _owner](src/PrelaunchPoints.sol#L379)
 
-src/PrelaunchPoints.sol#L336
+src/PrelaunchPoints.sol#L378
 
 
  - [ ] ID-21
-[PrelaunchPoints.constructor(address,address,address[])._exchangeProxy](src/PrelaunchPoints.sol#L102) lacks a zero-check on :
-		- [exchangeProxy = _exchangeProxy](src/PrelaunchPoints.sol#L104)
+[PrelaunchPoints.constructor(address,address,address[])._exchangeProxy](src/PrelaunchPoints.sol#L116) lacks a zero-check on :
+		- [exchangeProxy = _exchangeProxy](src/PrelaunchPoints.sol#L121)
 
-src/PrelaunchPoints.sol#L102
+src/PrelaunchPoints.sol#L116
 
 
 ## reentrancy-benign
 Impact: Low
 Confidence: Medium
  - [ ] ID-22
-Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L314-L330):
+Reentrancy in [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L199-L225):
 	External calls:
-	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L320)
-	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L321)
+	- [WETH.deposit{value: _amount}()](src/PrelaunchPoints.sol#L209)
 	State variables written after the call(s):
-	- [totalLpETH = lpETH.balanceOf(address(this))](src/PrelaunchPoints.sol#L324)
+	- [balances[_receiver][address(WETH)] += _amount](src/PrelaunchPoints.sol#L211)
+	- [totalSupply += _amount](src/PrelaunchPoints.sol#L210)
 
-src/PrelaunchPoints.sol#L314-L330
+src/PrelaunchPoints.sol#L199-L225
 
 
  - [ ] ID-23
-Reentrancy in [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L177-L201):
+Reentrancy in [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L199-L225):
 	External calls:
-	- [IERC20(_token).safeTransferFrom(msg.sender,address(this),_amount)](src/PrelaunchPoints.sol#L192)
+	- [IERC20(_token).safeTransferFrom(msg.sender,address(this),_amount)](src/PrelaunchPoints.sol#L216)
 	State variables written after the call(s):
-	- [balances[_receiver][_token] += _amount](src/PrelaunchPoints.sol#L197)
-	- [totalSupply += _amount](src/PrelaunchPoints.sol#L195)
+	- [balances[_receiver][_token] += _amount](src/PrelaunchPoints.sol#L221)
+	- [totalSupply += _amount](src/PrelaunchPoints.sol#L219)
 
-src/PrelaunchPoints.sol#L177-L201
+src/PrelaunchPoints.sol#L199-L225
 
 
  - [ ] ID-24
-Reentrancy in [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L177-L201):
+Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372):
 	External calls:
-	- [WETH.deposit{value: _amount}()](src/PrelaunchPoints.sol#L185)
+	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L362)
+	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L363)
 	State variables written after the call(s):
-	- [balances[_receiver][address(WETH)] += _amount](src/PrelaunchPoints.sol#L187)
-	- [totalSupply += _amount](src/PrelaunchPoints.sol#L186)
+	- [totalLpETH = lpETH.balanceOf(address(this))](src/PrelaunchPoints.sol#L366)
 
-src/PrelaunchPoints.sol#L177-L201
+src/PrelaunchPoints.sol#L352-L372
 
 
 ## reentrancy-events
 Impact: Low
 Confidence: Medium
  - [ ] ID-25
-Reentrancy in [PrelaunchPoints.recoverERC20(address,uint256)](src/PrelaunchPoints.sol#L391-L398):
+Reentrancy in [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L199-L225):
 	External calls:
-	- [IERC20(tokenAddress).safeTransfer(owner,tokenAmount)](src/PrelaunchPoints.sol#L395)
+	- [WETH.deposit{value: _amount}()](src/PrelaunchPoints.sol#L209)
+	- [IERC20(_token).safeTransferFrom(msg.sender,address(this),_amount)](src/PrelaunchPoints.sol#L216)
+	External calls sending eth:
+	- [WETH.deposit{value: _amount}()](src/PrelaunchPoints.sol#L209)
 	Event emitted after the call(s):
-	- [Recovered(tokenAddress,tokenAmount)](src/PrelaunchPoints.sol#L397)
+	- [Locked(_receiver,_amount,_token,_referral)](src/PrelaunchPoints.sol#L224)
 
-src/PrelaunchPoints.sol#L391-L398
+src/PrelaunchPoints.sol#L199-L225
 
 
  - [ ] ID-26
-Reentrancy in [PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L284-L306):
+Reentrancy in [PrelaunchPoints._fillQuote(IERC20,uint256,bytes)](src/PrelaunchPoints.sol#L581-L602):
 	External calls:
-	- [IERC20(_token).safeTransfer(msg.sender,lockedAmount)](src/PrelaunchPoints.sol#L303)
+	- [! _sellToken.approve(exchangeProxy,_amount)](src/PrelaunchPoints.sol#L589)
+	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
+	External calls sending eth:
+	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
 	Event emitted after the call(s):
-	- [Withdrawn(msg.sender,_token,lockedAmount)](src/PrelaunchPoints.sol#L305)
+	- [SwappedTokens(address(_sellToken),_amount,boughtWETHAmount)](src/PrelaunchPoints.sol#L601)
 
-src/PrelaunchPoints.sol#L284-L306
+src/PrelaunchPoints.sol#L581-L602
 
 
  - [ ] ID-27
-Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L314-L330):
+Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372):
 	External calls:
-	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L320)
-	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L321)
+	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L362)
+	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L363)
 	Event emitted after the call(s):
-	- [Converted(totalSupply,totalLpETH)](src/PrelaunchPoints.sol#L329)
+	- [Converted(totalSupply,totalLpETH)](src/PrelaunchPoints.sol#L371)
 
-src/PrelaunchPoints.sol#L314-L330
+src/PrelaunchPoints.sol#L352-L372
 
 
  - [ ] ID-28
-Reentrancy in [PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L244-L276):
+Reentrancy in [PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L279-L314):
 	External calls:
-	- [lpETH.safeTransfer(_receiver,claimedAmount)](src/PrelaunchPoints.sol#L259)
-	- [_fillQuote(IERC20(_token),userClaim,_data)](src/PrelaunchPoints.sol#L268)
-		- [! _sellToken.approve(exchangeProxy,_amount)](src/PrelaunchPoints.sol#L508)
-		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
-	- [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L272)
-	- [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L273)
+	- [lpETH.safeTransfer(_receiver,claimedAmount)](src/PrelaunchPoints.sol#L297)
+	- [_fillQuote(IERC20(_token),userClaim,_data)](src/PrelaunchPoints.sol#L306)
+		- [! _sellToken.approve(exchangeProxy,_amount)](src/PrelaunchPoints.sol#L589)
+		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
+	- [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L310)
+	- [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L311)
 	External calls sending eth:
-	- [_fillQuote(IERC20(_token),userClaim,_data)](src/PrelaunchPoints.sol#L268)
-		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
+	- [_fillQuote(IERC20(_token),userClaim,_data)](src/PrelaunchPoints.sol#L306)
+		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
 	Event emitted after the call(s):
-	- [Claimed(msg.sender,_token,claimedAmount)](src/PrelaunchPoints.sol#L275)
+	- [Claimed(msg.sender,_token,claimedAmount)](src/PrelaunchPoints.sol#L313)
 
-src/PrelaunchPoints.sol#L244-L276
+src/PrelaunchPoints.sol#L279-L314
 
 
  - [ ] ID-29
-Reentrancy in [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L230-L239):
+Reentrancy in [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L256-L274):
 	External calls:
-	- [claimedAmount = _claim(_token,address(this),_percentage,_exchange,_data)](src/PrelaunchPoints.sol#L234)
+	- [claimedAmount = _claim(_token,address(this),_percentage,_exchange,_data)](src/PrelaunchPoints.sol#L263-L269)
 		- [returndata = address(token).functionCall(data)](lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol#L96)
-		- [! _sellToken.approve(exchangeProxy,_amount)](src/PrelaunchPoints.sol#L508)
+		- [! _sellToken.approve(exchangeProxy,_amount)](src/PrelaunchPoints.sol#L589)
+		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
 		- [(success,returndata) = target.call{value: value}(data)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L87)
-		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
-		- [lpETH.safeTransfer(_receiver,claimedAmount)](src/PrelaunchPoints.sol#L259)
-		- [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L272)
-		- [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L273)
-	- [lpETH.approve(address(lpETHVault),claimedAmount)](src/PrelaunchPoints.sol#L235)
-	- [lpETHVault.stake(claimedAmount,msg.sender,_typeIndex)](src/PrelaunchPoints.sol#L236)
+		- [lpETH.safeTransfer(_receiver,claimedAmount)](src/PrelaunchPoints.sol#L297)
+		- [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L310)
+		- [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L311)
+	- [lpETH.approve(address(lpETHVault),claimedAmount)](src/PrelaunchPoints.sol#L270)
+	- [lpETHVault.stake(claimedAmount,msg.sender,_typeIndex)](src/PrelaunchPoints.sol#L271)
 	External calls sending eth:
-	- [claimedAmount = _claim(_token,address(this),_percentage,_exchange,_data)](src/PrelaunchPoints.sol#L234)
+	- [claimedAmount = _claim(_token,address(this),_percentage,_exchange,_data)](src/PrelaunchPoints.sol#L263-L269)
+		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
 		- [(success,returndata) = target.call{value: value}(data)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L87)
-		- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
 	Event emitted after the call(s):
-	- [StakedVault(msg.sender,claimedAmount,_typeIndex)](src/PrelaunchPoints.sol#L238)
+	- [StakedVault(msg.sender,claimedAmount,_typeIndex)](src/PrelaunchPoints.sol#L273)
 
-src/PrelaunchPoints.sol#L230-L239
+src/PrelaunchPoints.sol#L256-L274
 
 
  - [ ] ID-30
-Reentrancy in [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L177-L201):
+Reentrancy in [PrelaunchPoints.recoverERC20(address,uint256)](src/PrelaunchPoints.sol#L432-L442):
 	External calls:
-	- [WETH.deposit{value: _amount}()](src/PrelaunchPoints.sol#L185)
-	- [IERC20(_token).safeTransferFrom(msg.sender,address(this),_amount)](src/PrelaunchPoints.sol#L192)
-	External calls sending eth:
-	- [WETH.deposit{value: _amount}()](src/PrelaunchPoints.sol#L185)
+	- [IERC20(tokenAddress).safeTransfer(owner,tokenAmount)](src/PrelaunchPoints.sol#L439)
 	Event emitted after the call(s):
-	- [Locked(_receiver,_amount,_token,_referral)](src/PrelaunchPoints.sol#L200)
+	- [Recovered(tokenAddress,tokenAmount)](src/PrelaunchPoints.sol#L441)
 
-src/PrelaunchPoints.sol#L177-L201
+src/PrelaunchPoints.sol#L432-L442
 
 
  - [ ] ID-31
-Reentrancy in [PrelaunchPoints._fillQuote(IERC20,uint256,bytes)](src/PrelaunchPoints.sol#L504-L521):
+Reentrancy in [PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L322-L344):
 	External calls:
-	- [! _sellToken.approve(exchangeProxy,_amount)](src/PrelaunchPoints.sol#L508)
-	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
-	External calls sending eth:
-	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
+	- [IERC20(_token).safeTransfer(msg.sender,lockedAmount)](src/PrelaunchPoints.sol#L341)
 	Event emitted after the call(s):
-	- [SwappedTokens(address(_sellToken),_amount,boughtWETHAmount)](src/PrelaunchPoints.sol#L520)
+	- [Withdrawn(msg.sender,_token,lockedAmount)](src/PrelaunchPoints.sol#L343)
 
-src/PrelaunchPoints.sol#L504-L521
+src/PrelaunchPoints.sol#L322-L344
 
 
 ## timestamp
 Impact: Low
 Confidence: Medium
  - [ ] ID-32
-[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L314-L330) uses timestamp for comparisons
+[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372) uses timestamp for comparisons
 	Dangerous comparisons:
-	- [block.timestamp - loopActivation <= TIMELOCK](src/PrelaunchPoints.sol#L315)
+	- [block.timestamp - loopActivation <= TIMELOCK](src/PrelaunchPoints.sol#L357)
 
-src/PrelaunchPoints.sol#L314-L330
+src/PrelaunchPoints.sol#L352-L372
 
 
  - [ ] ID-33
-[PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L284-L306) uses timestamp for comparisons
+[PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L322-L344) uses timestamp for comparisons
 	Dangerous comparisons:
-	- [block.timestamp >= startClaimDate](src/PrelaunchPoints.sol#L286)
-	- [block.timestamp >= startClaimDate](src/PrelaunchPoints.sol#L298)
+	- [block.timestamp >= startClaimDate](src/PrelaunchPoints.sol#L324)
+	- [block.timestamp >= startClaimDate](src/PrelaunchPoints.sol#L336)
 
-src/PrelaunchPoints.sol#L284-L306
+src/PrelaunchPoints.sol#L322-L344
 
 
 ## assembly
 Impact: Informational
 Confidence: High
  - [ ] ID-34
-[PrelaunchPoints._decodeUniswapV3Data(bytes)](src/PrelaunchPoints.sol#L461-L477) uses assembly
-	- [INLINE ASM](src/PrelaunchPoints.sol#L467-L476)
+[PrelaunchPoints._decodeUniswapV3Data(bytes)](src/PrelaunchPoints.sol#L520-L547) uses assembly
+	- [INLINE ASM](src/PrelaunchPoints.sol#L534-L546)
 
-src/PrelaunchPoints.sol#L461-L477
+src/PrelaunchPoints.sol#L520-L547
 
 
  - [ ] ID-35
-[PrelaunchPoints._decodeTransformERC20Data(bytes)](src/PrelaunchPoints.sol#L483-L495) uses assembly
-	- [INLINE ASM](src/PrelaunchPoints.sol#L488-L494)
+[PrelaunchPoints._decodeTransformERC20Data(bytes)](src/PrelaunchPoints.sol#L553-L572) uses assembly
+	- [INLINE ASM](src/PrelaunchPoints.sol#L565-L571)
 
-src/PrelaunchPoints.sol#L483-L495
+src/PrelaunchPoints.sol#L553-L572
 
 
  - [ ] ID-36
@@ -434,24 +434,24 @@ lib/openzeppelin-contracts/contracts/interfaces/draft-IERC6093.sol#L3
 Impact: Informational
 Confidence: High
  - [ ] ID-39
+Low level call in [PrelaunchPoints._fillQuote(IERC20,uint256,bytes)](src/PrelaunchPoints.sol#L581-L602):
+	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L593)
+
+src/PrelaunchPoints.sol#L581-L602
+
+
+ - [ ] ID-40
 Low level call in [Address.functionStaticCall(address,bytes)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L95-L98):
 	- [(success,returndata) = target.staticcall(data)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L96)
 
 lib/openzeppelin-contracts/contracts/utils/Address.sol#L95-L98
 
 
- - [ ] ID-40
+ - [ ] ID-41
 Low level call in [Address.functionDelegateCall(address,bytes)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L104-L107):
 	- [(success,returndata) = target.delegatecall(data)](lib/openzeppelin-contracts/contracts/utils/Address.sol#L105)
 
 lib/openzeppelin-contracts/contracts/utils/Address.sol#L104-L107
-
-
- - [ ] ID-41
-Low level call in [PrelaunchPoints._fillQuote(IERC20,uint256,bytes)](src/PrelaunchPoints.sol#L504-L521):
-	- [(success,None) = address(exchangeProxy).call{value: 0}(_swapCallData)](src/PrelaunchPoints.sol#L512)
-
-src/PrelaunchPoints.sol#L504-L521
 
 
  - [ ] ID-42

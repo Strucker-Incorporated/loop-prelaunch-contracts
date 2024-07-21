@@ -8,9 +8,9 @@ import "../src/interfaces/ILpETH.sol";
 import "../src/mock/AttackContract.sol";
 import "../src/mock/MockLpETH.sol";
 import "../src/mock/MockLpETHVault.sol";
-import {ERC20Token} from "../src/mock/MockERC20.sol";
-import {LRToken} from "../src/mock/MockLRT.sol";
-import {MockWETH} from "../src/mock/MockWETH.sol";
+import { ERC20Token } from "../src/mock/MockERC20.sol";
+import { LRToken } from "../src/mock/MockLRT.sol";
+import { MockWETH } from "../src/mock/MockWETH.sol";
 
 import "forge-std/console.sol";
 
@@ -35,7 +35,7 @@ contract PrelaunchPointsTest is Test {
         weth = new MockWETH();
         WETH = address(weth);
         vm.deal(address(this), INITIAL_SUPPLY);
-        weth.deposit{value: INITIAL_SUPPLY}();
+        weth.deposit{ value: INITIAL_SUPPLY }();
 
         address[] storage allowedTokens_ = allowedTokens;
         allowedTokens_.push(address(lrt));
@@ -52,7 +52,7 @@ contract PrelaunchPointsTest is Test {
     function testLockETH(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, INITIAL_SUPPLY * 1e10);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         assertEq(prelaunchPoints.balances(address(this), WETH), lockAmount);
         assertEq(prelaunchPoints.totalSupply(), lockAmount);
@@ -68,12 +68,12 @@ contract PrelaunchPointsTest is Test {
 
         vm.deal(address(this), lockAmount);
         vm.expectRevert(PrelaunchPoints.NoLongerPossible.selector);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
     }
 
     function testLockETHFailZero() public {
         vm.expectRevert(PrelaunchPoints.CannotLockZero.selector);
-        prelaunchPoints.lockETH{value: 0}(referral);
+        prelaunchPoints.lockETH{ value: 0 }(referral);
     }
 
     /// ======= Tests for lockETHFor ======= ///
@@ -82,7 +82,7 @@ contract PrelaunchPointsTest is Test {
         address recipient = address(0x1234);
 
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETHFor{value: lockAmount}(recipient, referral);
+        prelaunchPoints.lockETHFor{ value: lockAmount }(recipient, referral);
 
         assertEq(prelaunchPoints.balances(recipient, WETH), lockAmount);
         assertEq(prelaunchPoints.totalSupply(), lockAmount);
@@ -99,14 +99,14 @@ contract PrelaunchPointsTest is Test {
 
         vm.deal(address(this), lockAmount);
         vm.expectRevert(PrelaunchPoints.NoLongerPossible.selector);
-        prelaunchPoints.lockETHFor{value: lockAmount}(recipient, referral);
+        prelaunchPoints.lockETHFor{ value: lockAmount }(recipient, referral);
     }
 
     function testLockETHForFailZero() public {
         address recipient = address(0x1234);
 
         vm.expectRevert(PrelaunchPoints.CannotLockZero.selector);
-        prelaunchPoints.lockETHFor{value: 0}(recipient, referral);
+        prelaunchPoints.lockETHFor{ value: 0 }(recipient, referral);
     }
 
     /// ======= Tests for lock ======= ///
@@ -117,7 +117,7 @@ contract PrelaunchPointsTest is Test {
 
         assertEq(prelaunchPoints.balances(address(this), address(lrt)), lockAmount);
     }
-    
+
     function testLockWETH(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, INITIAL_SUPPLY);
         weth.approve(address(prelaunchPoints), lockAmount);
@@ -236,7 +236,7 @@ contract PrelaunchPointsTest is Test {
     function testConvertAllETH(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
 
@@ -251,7 +251,7 @@ contract PrelaunchPointsTest is Test {
     function testConvertAllFailActivation(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, INITIAL_SUPPLY * 1e10);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
 
@@ -265,7 +265,7 @@ contract PrelaunchPointsTest is Test {
     function testClaim(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -293,11 +293,11 @@ contract PrelaunchPointsTest is Test {
         vm.deal(user1, lockAmount1);
         vm.deal(user2, lockAmount2);
 
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
         vm.prank(user1);
-        prelaunchPoints.lockETH{value: lockAmount1}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount1 }(referral);
         vm.prank(user2);
-        prelaunchPoints.lockETH{value: lockAmount2}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount2 }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -323,7 +323,7 @@ contract PrelaunchPointsTest is Test {
     function testClaimFailTwice(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -340,7 +340,7 @@ contract PrelaunchPointsTest is Test {
     function testClaimFailBeforeConvert(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -354,7 +354,7 @@ contract PrelaunchPointsTest is Test {
     function testClaimAndStake(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -383,11 +383,11 @@ contract PrelaunchPointsTest is Test {
         vm.deal(user1, lockAmount1);
         vm.deal(user2, lockAmount2);
 
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
         vm.prank(user1);
-        prelaunchPoints.lockETH{value: lockAmount1}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount1 }(referral);
         vm.prank(user2);
-        prelaunchPoints.lockETH{value: lockAmount2}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount2 }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -415,7 +415,7 @@ contract PrelaunchPointsTest is Test {
     function testClaimAndStakeFailTwice(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -432,7 +432,7 @@ contract PrelaunchPointsTest is Test {
     function testClaimAndStakeFailBeforeConvert(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         // Set Loop Contracts and Convert to lpETH
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
@@ -443,7 +443,7 @@ contract PrelaunchPointsTest is Test {
     }
 
     /// ======= Tests for withdraw ETH ======= ///
-    receive() external payable {}
+    receive() external payable { }
 
     function testWithdrawETH(uint256 lockAmount) public {
         vm.assume(lockAmount > 0);
@@ -462,7 +462,7 @@ contract PrelaunchPointsTest is Test {
     function testWithdrawETHBeforeActivation(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, INITIAL_SUPPLY * 1e10);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         prelaunchPoints.withdraw(WETH);
 
@@ -474,7 +474,7 @@ contract PrelaunchPointsTest is Test {
     function testWithdrawETHBeforeActivationEmergencyMode(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, INITIAL_SUPPLY * 1e10);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         prelaunchPoints.setEmergencyMode(true);
 
@@ -487,7 +487,7 @@ contract PrelaunchPointsTest is Test {
     function testWithdrawETHFailAfterConvert(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, 1e36);
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
         vm.warp(prelaunchPoints.loopActivation() + prelaunchPoints.TIMELOCK() + 1);
@@ -621,7 +621,7 @@ contract PrelaunchPointsTest is Test {
     function testSetLoopAddressesFailAfterDeadline(uint256 lockAmount) public {
         lockAmount = bound(lockAmount, 1, INITIAL_SUPPLY) * 1e10;
         vm.deal(address(this), lockAmount);
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         vm.warp(prelaunchPoints.loopActivation() + 1);
 
@@ -694,7 +694,7 @@ contract PrelaunchPointsTest is Test {
         vm.deal(address(this), 1 ether);
 
         vm.expectRevert(PrelaunchPoints.ReceiveDisabled.selector);
-        address(prelaunchPoints).call{value: 1 ether}("");
+        address(prelaunchPoints).call{ value: 1 ether }("");
     }
 
     /// ======= Reentrancy Tests ======= ///
@@ -703,7 +703,7 @@ contract PrelaunchPointsTest is Test {
 
         vm.deal(address(this), lockAmount);
         vm.prank(address(this));
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         vm.warp(prelaunchPoints.loopActivation() + 1 days);
         vm.prank(address(attackContract));
@@ -716,7 +716,7 @@ contract PrelaunchPointsTest is Test {
 
         vm.deal(address(this), lockAmount);
         vm.prank(address(this));
-        prelaunchPoints.lockETH{value: lockAmount}(referral);
+        prelaunchPoints.lockETH{ value: lockAmount }(referral);
 
         prelaunchPoints.setLoopAddresses(address(lpETH), address(lpETHVault));
         vm.warp(prelaunchPoints.loopActivation() + prelaunchPoints.TIMELOCK() + 1 days);

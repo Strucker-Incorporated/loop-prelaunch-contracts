@@ -37,10 +37,9 @@ format:; forge fmt
 
 anvil:; anvil -m 'test test test test test test test test test test test junk' --steps-tracing --block-time 1
 
-# Run Slither and output findings to slither_report.txt
-# Run Slither and output findings to slither_report.md, including ignored findings
-slither:; slither . --config-file slither.config.json --checklist --show-ignored-findings > slither_report.md
+# Run Slither and output findings to slither_report.md
+slither:; slither . --config-file slither.config.json --checklist --show-ignored-findings > slither_General_Report.md
 
-scope:; tree ./src/ | sed 's/└/#/g; s/──/--/g; s/├/#/g; s/│ /|/g; s/│/|/g'
+scope:; tree ./src/ | sed 's/└/#/g; s/──/--/g; s/├/#/g; s/│ /|/g; s/│/|/g' | grep -v 'mock/'
 
 scopefile:; @tree ./src/ | sed 's/└/#/g' | awk -F '── ' '!/\.sol$$/ { path[int((length($$0) - length($$2))/2)] = $$2; next } { p = "src"; for(i=2; i<=int((length($$0) - length($$2))/2)); i++) if (path[i] != "") p = p "/" path[i]; print p "/" $$2; }' > scope.txt
