@@ -24,6 +24,9 @@ aderyn:; cargo install aderyn && aderyn .
 # Update Dependencies
 update:; forge update
 
+openzeppelin:; forge install openzeppelin/openzeppelin-contracts --no-commit
+
+
 build:; forge build
 
 test:; forge test
