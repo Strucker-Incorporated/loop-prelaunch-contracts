@@ -1,6 +1,6 @@
 -include .env
 
-.PHONY: all test clean deploy fund help install snapshot format anvil scopefile aderyn rust
+.PHONY: all test clean deploy fund help install snapshot format anvil scopefile aderyn rust slither-install
 
 DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
@@ -21,6 +21,9 @@ rust:; curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y &
 # Install Aderyn
 aderyn:; cargo install aderyn && aderyn .
 
+# Install Slither
+slither-install:; pip3 install slither-analyzer
+
 # Update Dependencies
 update:; forge update
 
@@ -38,4 +41,4 @@ slither:; slither . --config-file slither.config.json --checklist
 
 scope:; tree ./src/ | sed 's/└/#/g; s/──/--/g; s/├/#/g; s/│ /|/g; s/│/|/g'
 
-scopefile:; @tree ./src/ | sed 's/└/#/g' | awk -F '── ' '!/\.sol$$/ { path[int((length($$0) - length($$2))/2)] = $$2; next } { p = "src"; for(i=2; i<=int((length($$0) - length($$2))/2); i++) if (path[i] != "") p = p "/" path[i]; print p "/" $$2; }' > scope.txt
+scopefile:; @tree ./src/ | sed 's/└/#/g' | awk -F '── ' '!/\.sol$$/ { path[int((length($$0) - length($$2))/2)] = $$2; next } { p = "src"; for(i=2; i<=int((length($$0) - length($$2))/2)); i++) if (path[i] != "") p = p "/" path[i]; print p "/" $$2; }' > scope.txt
