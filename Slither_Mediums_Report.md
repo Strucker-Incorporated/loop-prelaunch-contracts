@@ -76,86 +76,86 @@ Impact: Medium
 Confidence: High
  - [ ] ID-8
 Contract locking ether found:
-	Contract [AttackContract](src/mock/AttackContract.sol#L6-L40) has payable functions:
-	 - [AttackContract.receive()](src/mock/AttackContract.sol#L28-L39)
+	Contract [AttackContract](src/mock/AttackContract.sol#L6-L30) has payable functions:
+	 - [AttackContract.receive()](src/mock/AttackContract.sol#L23-L29)
 	But does not have a function to withdraw the ether
 
-src/mock/AttackContract.sol#L6-L40
+src/mock/AttackContract.sol#L6-L30
 
 
 ## reentrancy-no-eth
 Impact: Medium
 Confidence: Medium
  - [ ] ID-9
-Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372):
+Reentrancy in [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L336-L352):
 	External calls:
-	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L362)
-	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L363)
+	- [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L342)
+	- [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L343)
 	State variables written after the call(s):
-	- [startClaimDate = uint32(block.timestamp)](src/PrelaunchPoints.sol#L369)
+	- [startClaimDate = uint32(block.timestamp)](src/PrelaunchPoints.sol#L349)
 	[PrelaunchPoints.startClaimDate](src/PrelaunchPoints.sol#L47) can be used in cross function reentrancies:
-	- [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L199-L225)
-	- [PrelaunchPoints.claim(address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L238-L245)
-	- [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L256-L274)
-	- [PrelaunchPoints.constructor(address,address,address[])](src/PrelaunchPoints.sol#L115-L136)
-	- [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372)
+	- [PrelaunchPoints._processLock(address,uint256,address,bytes32)](src/PrelaunchPoints.sol#L177-L206)
+	- [PrelaunchPoints.claim(address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L219-L229)
+	- [PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L240-L255)
+	- [PrelaunchPoints.constructor(address,address,address[])](src/PrelaunchPoints.sol#L102-L119)
+	- [PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L336-L352)
 	- [PrelaunchPoints.startClaimDate](src/PrelaunchPoints.sol#L47)
-	- [PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L322-L344)
+	- [PrelaunchPoints.withdraw(address)](src/PrelaunchPoints.sol#L306-L328)
 
-src/PrelaunchPoints.sol#L352-L372
+src/PrelaunchPoints.sol#L336-L352
 
 
 ## uninitialized-local
 Impact: Medium
 Confidence: Medium
  - [ ] ID-10
-[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputTokenAmount](src/PrelaunchPoints.sol#L469) is a local variable never initialized
+[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputTokenAmount](src/PrelaunchPoints.sol#L445) is a local variable never initialized
 
-src/PrelaunchPoints.sol#L469
+src/PrelaunchPoints.sol#L445
 
 
  - [ ] ID-11
-[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).outputToken](src/PrelaunchPoints.sol#L468) is a local variable never initialized
+[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).outputToken](src/PrelaunchPoints.sol#L444) is a local variable never initialized
 
-src/PrelaunchPoints.sol#L468
+src/PrelaunchPoints.sol#L444
 
 
  - [ ] ID-12
-[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputToken](src/PrelaunchPoints.sol#L467) is a local variable never initialized
+[PrelaunchPoints._validateData(address,uint256,PrelaunchPoints.Exchange,bytes).inputToken](src/PrelaunchPoints.sol#L443) is a local variable never initialized
 
-src/PrelaunchPoints.sol#L467
+src/PrelaunchPoints.sol#L443
 
 
 ## unused-return
 Impact: Medium
 Confidence: Medium
  - [ ] ID-13
-[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372) ignores return value by [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L362)
+[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L260-L298) ignores return value by [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L294)
 
-src/PrelaunchPoints.sol#L352-L372
+src/PrelaunchPoints.sol#L260-L298
 
 
  - [ ] ID-14
-[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L352-L372) ignores return value by [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L363)
+[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L336-L352) ignores return value by [WETH.approve(address(lpETH),totalSupply)](src/PrelaunchPoints.sol#L342)
 
-src/PrelaunchPoints.sol#L352-L372
+src/PrelaunchPoints.sol#L336-L352
 
 
  - [ ] ID-15
-[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L279-L314) ignores return value by [WETH.approve(address(lpETH),claimedAmount)](src/PrelaunchPoints.sol#L310)
+[PrelaunchPoints.convertAllETH()](src/PrelaunchPoints.sol#L336-L352) ignores return value by [lpETH.deposit(totalSupply,address(this))](src/PrelaunchPoints.sol#L343)
 
-src/PrelaunchPoints.sol#L279-L314
+src/PrelaunchPoints.sol#L336-L352
 
 
  - [ ] ID-16
-[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L279-L314) ignores return value by [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L311)
+[PrelaunchPoints._claim(address,address,uint8,PrelaunchPoints.Exchange,bytes)](src/PrelaunchPoints.sol#L260-L298) ignores return value by [lpETH.deposit(claimedAmount,_receiver)](src/PrelaunchPoints.sol#L295)
 
-src/PrelaunchPoints.sol#L279-L314
+src/PrelaunchPoints.sol#L260-L298
 
 
  - [ ] ID-17
-[PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L256-L274) ignores return value by [lpETH.approve(address(lpETHVault),claimedAmount)](src/PrelaunchPoints.sol#L270)
+[PrelaunchPoints.claimAndStake(address,uint8,PrelaunchPoints.Exchange,uint256,bytes)](src/PrelaunchPoints.sol#L240-L255) ignores return value by [lpETH.approve(address(lpETHVault),claimedAmount)](src/PrelaunchPoints.sol#L251)
 
-src/PrelaunchPoints.sol#L256-L274
+src/PrelaunchPoints.sol#L240-L255
 
 

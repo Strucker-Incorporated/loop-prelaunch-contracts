@@ -38,7 +38,7 @@ format:; forge fmt
 anvil:; anvil -m 'test test test test test test test test test test test junk' --steps-tracing --block-time 1
 
 # Run Slither and output findings to slither_report.md
-slither:; slither . --config-file slither.config.json --checklist --show-ignored-findings > slither_General_Report.md
+slither:; slither . --config-file slither.config.json --checklist --show-ignored-findings > Slither_General_Report.md
 
 scope:; tree ./src/ | sed 's/└/#/g; s/──/--/g; s/├/#/g; s/│ /|/g; s/│/|/g' | grep -v 'mock/'
 
