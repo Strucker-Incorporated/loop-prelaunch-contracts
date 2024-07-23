@@ -25,5 +25,7 @@ node_modules
 cache_hardhat
 artifacts
 typechain
-lib/openzeppelin-contracts
 
+lib/openzeppelin-contracts
+.gitignore
+lib/openzeppelin-contracts

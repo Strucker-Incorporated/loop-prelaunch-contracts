@@ -19,8 +19,9 @@ RUN apt-get update && \
     solc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install additional tools like Foundry, Echidna, etc.
-# (Add installation steps for these tools here if needed)
+# Install additional tools
+# Install Echidna
+RUN pip3 install echidna
 
 # Set the working directory
 WORKDIR /mnt
