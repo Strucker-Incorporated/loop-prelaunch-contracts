@@ -1,3 +1,12 @@
-version: '1'
-contract: src/PrelaunchPoints.sol
-test: test/PrelaunchPointsInvariants.hed
+# echidna.yaml
+
+# Paths to your source files
+sources:
+  - src/PrelaunchPoints.sol
+  - test/PrelaunchPointsInvariants.sol
+
+# Configuration options
+solc:
+  version: '0.8.20'
+  optimization: true
+  optimize-runs: 200
