@@ -1,12 +1,14 @@
-# echidna.yaml
-
-# Configuration for specific contract analysis
-contract: PrelaunchPointsInvariants
-
-# Specify the Solidity compiler version and settings
+# Configuration for Echidna analysis
+contract: PrelaunchPointsTest
 solc-args: "--optimize --optimize-runs 200"
 
-# Paths to your source files
 sources:
   - src/PrelaunchPoints.sol
-  - test/PrelaunchPointsInvariants.sol
+  - test/PrelaunchPoints.t.sol
+
+contract: PrelaunchPoints0xTest
+solc-args: "--optimize --optimize-runs 200"
+
+sources:
+  - src/PrelaunchPoints.sol
+  - test/PrelaunchPoints0x.test.sol

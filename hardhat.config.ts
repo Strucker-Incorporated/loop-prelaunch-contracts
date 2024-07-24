@@ -1,12 +1,10 @@
-import { HardhatUserConfig } from "hardhat/config"
-import "@nomicfoundation/hardhat-ethers"
-import "@nomicfoundation/hardhat-toolbox"
-import "@nomicfoundation/hardhat-foundry"
-import "hardhat-tracer"
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-foundry";
+import "dotenv/config";
 
-import "dotenv/config"
-
-const RPC_URL = process.env.RPC_URL || "https://ethereum-rpc.publicnode.com"
+const RPC_URL = process.env.RPC_URL || "https://ethereum-rpc.publicnode.com";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.20",
@@ -17,11 +15,10 @@ const config: HardhatUserConfig = {
       },
     },
   },
-
   typechain: {
     outDir: "typechain",
     target: "ethers-v6",
   },
-}
+};
 
-export default config
+export default config;

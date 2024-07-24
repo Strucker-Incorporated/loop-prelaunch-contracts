@@ -3,71 +3,71 @@ pragma solidity ^0.8.20;
 
 import "../src/PrelaunchPoints.sol";
 
-// Example default addresses for testing
-address constant DEFAULT_EXCHANGE_PROXY = 0x0000000000000000000000000000000000000001; // Replace with a valid address
-address constant DEFAULT_WETH_ADDRESS = 0x0000000000000000000000000000000000000002; // Replace with a valid address
-
 contract PrelaunchPointsInvariants is PrelaunchPoints {
-    // Use default values in the constructor
-    constructor()
-        PrelaunchPoints(DEFAULT_EXCHANGE_PROXY, DEFAULT_WETH_ADDRESS, new address ) {}; // Pass an empty array of addresses
+    // Define initial setup or constructor parameters if needed
+    constructor(
+        address _exchangeProxy,
+        address _wethAddress,
+        address[] memory _allowedTokens
+    ) PrelaunchPoints(_exchangeProxy, _wethAddress, _allowedTokens) {}
 
-    // Define an invariant function that adheres to the correct contract interface
+    // Invariant to ensure only the owner can perform specific actions
     function invariant_ownerCanSetParams() public view {
         // Ensure only the owner can set new accepted tokens
-        require(msg.sender == owner() || !isTokenAllowed(msg.sender), "Owner must set token");
+        assert(msg.sender == owner || !isTokenAllowed[msg.sender]);
         // Ensure only the owner can set emergency mode
-        require(msg.sender == owner() || !emergencyMode(), "Owner must set emergency mode");
+        assert(msg.sender == owner || !emergencyMode);
         // Ensure only the owner can set new addresses
-        require(
-            msg.sender == owner() || (lpETH() == ILpETH(msg.sender) && lpETHVault() == ILpETHVault(msg.sender)),
-            "Owner must set addresses"
-        );
+        assert(msg.sender == owner || (lpETH == ILpETH(msg.sender) && lpETHVault == ILpETHVault(msg.sender)));
     }
 
+    // Invariant to ensure deposits are active up to lpETH and lpETHVault being set
     function invariant_depositsActive() public view {
-        // Ensure deposits are active up to lpETH and lpETHVault being set
-        require(
-            (lpETH() != ILpETH(address(0)) && lpETHVault() != ILpETHVault(address(0))) || block.timestamp < loopActivation(),
-            "Deposits should be active"
-        );
+        // Deposits should only be active if both lpETH and lpETHVault are set or if the loop has not been activated
+        assert((lpETH != ILpETH(address(0)) && lpETHVault != ILpETHVault(address(0))) || block.timestamp < loopActivation);
     }
 
+    // Invariant to ensure withdrawals are only active in emergency mode or within 7 days after loopActivation
     function invariant_withdrawals() public view {
-        // Ensure withdrawals are only active in emergency mode or within 7 days after loopActivation
-        bool withinWithdrawalPeriod = block.timestamp < loopActivation() + 7 days;
-        require(emergencyMode() || withinWithdrawalPeriod, "Withdrawals should be allowed");
+        bool withinWithdrawalPeriod = block.timestamp < loopActivation + TIMELOCK;
+        assert(emergencyMode || withinWithdrawalPeriod);
     }
 
+    // Invariant to ensure correct lpETH conversion for ETH/WETH deposits
     function invariant_correctETHConversion() public view {
-        // Ensure correct lpETH conversion for ETH/WETH deposits
-        uint256 totalWethSupply = WETH().balanceOf(address(this));
-        uint256 totalLPEthSupply = lpETH().balanceOf(address(this));
-        require(totalWethSupply == totalLPEthSupply, "ETH/WETH conversion mismatch");
+        uint256 totalWethSupply = WETH.balanceOf(address(this));
+        uint256 totalLPEthSupply = lpETH.balanceOf(address(this));
+        // Ensure the balance of WETH matches the balance of lpETH in the contract
+        assert(totalWethSupply == totalLPEthSupply);
     }
 
+    // Placeholder for the invariant to check correct LRT conversion
     function invariant_correctLRTConversion() public view {
-        // Placeholder for the invariant to check correct LRT conversion
-        require(true, "LRT conversion invariant placeholder"); // Placeholder assertion
+        // Implement detailed logic based on the specifics of LRT conversion
+        // This is a placeholder and may need actual verification logic
+        assert(true); // Placeholder assertion
     }
 
+    // Test if malicious 0x protocol calldata crafting can steal funds
     function invariant_malicious0xCalldata() public view {
-        // Test if malicious 0x protocol calldata crafting can steal funds
-        require(!isMalicious0xCalldata(), "Malicious 0x calldata detected");
+        // Example invariant checking; refine with actual logic
+        assert(!isMalicious0xCalldata());
     }
 
+    // Test if user funds can get locked forever
     function invariant_noLockedFunds() public view {
-        // Test if user funds can get locked forever
-        require(!hasLockedFunds(), "Funds are locked forever");
+        // Example invariant checking; refine with actual logic
+        assert(!hasLockedFunds());
     }
 
+    // Helper functions (these need to be implemented based on your specific logic)
     function isMalicious0xCalldata() internal view returns (bool) {
-        // Placeholder logic
+        // Placeholder logic to be replaced with actual checks
         return false;
     }
 
     function hasLockedFunds() internal view returns (bool) {
-        // Placeholder logic
+        // Placeholder logic to be replaced with actual checks
         return false;
     }
 }
