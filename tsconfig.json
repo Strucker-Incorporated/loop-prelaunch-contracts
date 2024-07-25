@@ -6,15 +6,9 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "outDir": "./dist",  // Output directory for compiled files
-    "rootDir": "./src"   // Root directory of your source files
+    "resolveJsonModule": true
   },
   "exclude": ["dist", "node_modules"],
-  "include": [
-    "./test",
-    "./scripts",
-    "./typechain" // Add this line to include Typechain types
-  ],
+  "include": ["./test", "./scripts"],
   "files": ["./hardhat.config.ts"]
 }

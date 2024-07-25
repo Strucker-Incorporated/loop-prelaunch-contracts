@@ -7,8 +7,12 @@ import {
 } from "@nomicfoundation/hardhat-toolbox/network-helpers"
 import fetch from "node-fetch"
 import "dotenv/config"
-import { IERC20, MockLpETH, MockLpETHVault, PrelaunchPoints } from "../typechain";
-
+import {
+  IERC20,
+  MockLpETH,
+  MockLpETHVault,
+  PrelaunchPoints,
+} from "../typechain"
 import { parseEther } from "ethers"
 
 const ZEROX_API_KEY = process.env.ZEROX_API_KEY || ""
