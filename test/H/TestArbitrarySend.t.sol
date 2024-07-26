@@ -6,6 +6,8 @@ import "../../src/PrelaunchPoints.sol";
 import "../../src/mock/MockERC20.sol";
 
 contract TestHelper is PrelaunchPoints {
+    event FillQuoteExecuted(address indexed sellToken, uint256 amount, bytes swapCallData);
+
     constructor(
         address _exchangeProxy,
         address _wethAddress,
@@ -19,9 +21,9 @@ contract TestHelper is PrelaunchPoints {
         bytes calldata _swapCallData
     ) public {
         _fillQuote(_sellToken, _amount, _swapCallData);
+        emit FillQuoteExecuted(address(_sellToken), _amount, _swapCallData); // Emit event for testing
     }
 }
-
 
 contract TestArbitrarySend is Test {
     TestHelper prelaunchPoints;
@@ -30,6 +32,8 @@ contract TestArbitrarySend is Test {
     address exchangeProxy = address(0x1234567890123456789012345678901234567890);
     address wethAddress = address(0x1234567890123456789012345678901234567891);
     address[] allowedTokens;
+
+    event FillQuoteExecuted(address indexed sellToken, uint256 amount, bytes swapCallData);
 
     function setUp() public {
         // Deploy the mock token
@@ -51,35 +55,32 @@ contract TestArbitrarySend is Test {
     }
 
     function testExploit() external {
-        uint256 amount = 1 ether; // Example amount to be used in the test
+    uint256 amount = 1 ether; // Example amount to be used in the test
 
-        // Setup mock data for the swap call
-        bytes memory swapCallData = ""; // Replace with appropriate data if needed
+    // Setup mock data for the swap call
+    bytes memory swapCallData = ""; // Replace with appropriate data if needed
 
-        // Approve the TestHelper contract to spend mock tokens
-        mockToken.approve(address(prelaunchPoints), amount);
+    // Approve the TestHelper contract to spend mock tokens
+    mockToken.approve(address(prelaunchPoints), amount);
 
-        // Record the initial ETH balance of the contract
-        uint256 initialBalance = address(prelaunchPoints).balance;
+    // Record the initial ETH balance and token balance of the contract
+    uint256 initialBalance = address(prelaunchPoints).balance;
+    uint256 initialTokenBalance = mockToken.balanceOf(address(prelaunchPoints));
 
-        // Trigger the _fillQuote function using the TestHelper contract
-        prelaunchPoints.exposeFillQuote(mockToken, amount, swapCallData);
-
-        // Fetch the new ETH balance of the contract
+    // Trigger the _fillQuote function using the TestHelper contract
+    try prelaunchPoints.exposeFillQuote(mockToken, amount, swapCallData) {
+        // Fetch the new ETH balance and token balance of the contract
         uint256 newBalance = address(prelaunchPoints).balance;
+        uint256 finalTokenBalance = mockToken.balanceOf(address(prelaunchPoints));
 
         // Assert that the balance has changed as expected
         assertGt(newBalance, initialBalance, "ETH balance should increase after calling _fillQuote");
-
-        // Additional assertions as needed
-        // For example:
-        // - Verify the mock token balance of the contract has decreased
-        uint256 finalTokenBalance = mockToken.balanceOf(address(prelaunchPoints));
-        assertEq(finalTokenBalance, 1000 ether - amount, "Mock token balance should decrease after calling _fillQuote");
-
-        // If _fillQuote emits any events, assert that they were emitted correctly
-        // For example:
-        // emit EventName(arg1, arg2);
-        // assertEmitted(prelaunchPoints, "EventName", arg1, arg2);
+        assertEq(finalTokenBalance, initialTokenBalance - amount, "Mock token balance should decrease after calling _fillQuote");
+    } catch Error(string memory reason) {
+        fail(reason);
+    } catch (bytes memory lowLevelData) {
+        fail(string(lowLevelData));
     }
+}
+
 }
