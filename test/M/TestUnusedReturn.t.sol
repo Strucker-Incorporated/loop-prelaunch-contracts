@@ -21,7 +21,11 @@ contract TestUnusedReturn is Test {
         allowedTokens.push(address(mockToken));
 
         // Deploy the PrelaunchPoints contract
-        prelaunchPoints = new PrelaunchPoints(exchangeProxy, wethAddress, allowedTokens);
+        prelaunchPoints = new PrelaunchPoints(
+            exchangeProxy,
+            wethAddress,
+            allowedTokens
+        );
     }
 
     function testFunction() external {

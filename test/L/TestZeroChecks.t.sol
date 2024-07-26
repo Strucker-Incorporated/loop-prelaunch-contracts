@@ -11,7 +11,10 @@ contract TestZeroChecks {
         proposedOwner = _owner; // Missing zero address check
     }
 
-    function setLoopAddresses(address _loopAddress, address _vaultAddress) external {
+    function setLoopAddresses(
+        address _loopAddress,
+        address _vaultAddress
+    ) external {
         lpETH = _loopAddress; // Missing zero address check
         lpETHVault = _vaultAddress; // Missing zero address check
     }

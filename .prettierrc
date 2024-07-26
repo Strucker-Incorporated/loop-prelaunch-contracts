@@ -1,6 +1,3 @@
 {
-  "plugins": ["prettier-plugin-solidity"],
-  "solidityPlugin": {
-    "version": "0.8.20"
-  }
+  "plugins": ["prettier-plugin-solidity"]
 }
