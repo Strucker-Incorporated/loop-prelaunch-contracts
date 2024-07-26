@@ -412,66 +412,9 @@ To elevate the "Unsafe ERC20 Operations" from low to medium risk, let's build ou
   }
   ```
 
-### Unused Custom Error (`unused-custom-error`)
-
-- **Description**: Custom error definitions are not used in the contract.
-- **Files and Lines**:
-  - `src/PrelaunchPoints.sol` [Line: 36](src/PrelaunchPoints.sol#L36)
-    ```javascript
-    error FailedToSendEther();
-    ```
-    *Explanation*: If custom errors are defined but not used, they should either be implemented in relevant places or removed to avoid confusion.
-
-- **Impact**: 
-  - Unused code elements may lead to confusion and potential issues in code maintenance.
-- **Mitigation**: 
-  - Implement the custom errors where applicable or remove them if not needed.
-- **PoC**: Show unused custom error in the contract.
-  ```javascript
-  // Contract with unused custom error
-  contract TestCustomError {
-      error FailedToSendEther(); // Unused error
-
-      function testFunction() external {
-          // Function logic here
-      }
-  }
-
-  ```
-
 
 ## Informationals
 
-### Assembly Usage (`assembly`)
-
-- **Description**: Direct usage of assembly in Solidity can provide low-level operations but may lead to less readable code and potential security issues.
-- **Files and Lines**:
-  - `src/PrelaunchPoints.sol` [Lines: 486-504](src/PrelaunchPoints.sol#L486-L504)
-    ```javascript
-    function _decodeUniswapV3Data(bytes memory data) internal pure returns (uint256, uint256) {
-        assembly {
-            // Inline assembly code for decoding data
-        }
-    }
-    ```
-    *Explanation*: Inline assembly is used for decoding data, which can be powerful but requires careful handling to avoid bugs or vulnerabilities.
-
-  - `src/PrelaunchPoints.sol` [Lines: 510-522](src/PrelaunchPoints.sol#L510-L522)
-    ```javascript
-    function _decodeTransformERC20Data(bytes memory data) internal pure returns (address, uint256) {
-        assembly {
-            // Inline assembly code for decoding ERC20 data
-        }
-    }
-    ```
-    *Explanation*: Inline assembly for handling ERC20 data. Ensure that all edge cases are handled correctly to avoid potential issues.
-
-- **Impact**: 
-  - Assembly code can be error-prone and harder to audit compared to high-level Solidity code.
-- **Mitigation**: 
-  - Carefully review and test assembly code to ensure correctness and security.
-
-   
 ### Event Missing Indexed Fields (`event-missing-indexed-fields`)
 
 - **Description**: Events lack indexed fields, making them less efficient to query.
@@ -511,6 +454,34 @@ To elevate the "Unsafe ERC20 Operations" from low to medium risk, let's build ou
       }
   }
   ```
+### Unused Custom Error (`unused-custom-error`)
+
+- **Description**: Custom error definitions are not used in the contract.
+- **Files and Lines**:
+  - `src/PrelaunchPoints.sol` [Line: 36](src/PrelaunchPoints.sol#L36)
+    ```javascript
+    error FailedToSendEther();
+    ```
+    *Explanation*: If custom errors are defined but not used, they should either be implemented in relevant places or removed to avoid confusion.
+
+- **Impact**: 
+  - Unused code elements may lead to confusion and potential issues in code maintenance.
+- **Mitigation**: 
+  - Implement the custom errors where applicable or remove them if not needed.
+- **PoC**: Show unused custom error in the contract.
+  ```javascript
+  // Contract with unused custom error
+  contract TestCustomError {
+      error FailedToSendEther(); // Unused error
+
+      function testFunction() external {
+          // Function logic here
+      }
+  }
+
+  ```
+
+
 ### Solidity Pragma Specificity (`solidity-pragma`)
 
 - **Description**: Using a wide version of Solidity pragma.
