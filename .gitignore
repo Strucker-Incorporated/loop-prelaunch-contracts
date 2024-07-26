@@ -27,4 +27,4 @@ artifacts
 typechain
 
 lib/openzeppelin-contracts
-.gitignore
+lib/openzeppelin-contracts/*
