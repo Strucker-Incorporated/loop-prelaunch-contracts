@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import "forge-std/Test.sol";
+import "../../src/PrelaunchPoints.sol";
+import "../../src/mock/MockERC20.sol";
+
 // Contract with events missing indexed fields
 contract TestEvents {
     event StakedVault(address user, uint256 amount, uint256 typeIndex);

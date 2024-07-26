@@ -2,7 +2,8 @@
 pragma solidity 0.8.20;
 
 import "forge-std/Test.sol";
-import "../src/PrelaunchPoints.sol";
+import "../../src/PrelaunchPoints.sol";
+import "../../src/mock/MockERC20.sol";
 
 // Contract demonstrating uninitialized variables
 contract TestUninitialized is Test {
