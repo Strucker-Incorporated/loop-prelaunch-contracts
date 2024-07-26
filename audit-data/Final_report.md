@@ -5,8 +5,14 @@
 ### High-Risk Issues
 
 #### 1. **Arbitrary ETH Sending (`arbitrary-send-eth`)**
-   - **Description**: The `_fillQuote` function in your contract uses a low-level `call` to interact with an arbitrary address specified by `exchangeProxy`, executing any code contained in the `swapCallData`. This presents a severe risk if the `exchangeProxy` is compromised or if the provided data payload is malicious. Since the function can execute arbitrary code, it may lead to unintended ETH transfers or state changes.
-   - **Lines**: [530-547](src/PrelaunchPoints.sol#L530-L547)
+   - **Description**: The `_fillQuote` function in the Loopfi contract employs a low-level `call` to interact with an arbitrary address specified by `exchangeProxy`, executing any code contained in the `swapCallData`. This function is designed to facilitate various interactions within Loopfi, a platform that enables users to engage in Ethereum carry trades using Liquid Restaking derivatives (LRTs) as collateral.
+    Loopfi allows users to borrow ETH and participate in the decentralized finance (DeFi) ecosystem, with the `exchangeProxy` potentially playing a pivotal role in these processes.
+
+   However, the design introduces a significant risk: if the `exchangeProxy` is compromised or if the `swapCallData` contains malicious instructions, the function could execute unintended or harmful actions. 
+   
+   Given the capacity of `_fillQuote` to execute arbitrary code, the platform is vulnerable to unauthorized ETH transfers, state manipulations, and broader contract exploitation.
+
+     - **Lines**: [530-547](src/PrelaunchPoints.sol#L530-L547)
    - **Code Context**:
      ```javascript
      function _fillQuote(IERC20 token, uint256 amount, bytes memory swapCallData) internal {
@@ -14,53 +20,114 @@
          require(success, "Swap failed");
      }
      ```
-   - **Impact**:
-     - **Unauthorized ETH Transfers**: The arbitrary code in `swapCallData` might include instructions to send ETH to an unintended address. For instance, if `swapCallData` directs the contract to send ETH to an attacker’s address, your project’s ETH reserves could be drained.
-     - **State Manipulation**: The external contract called by `exchangeProxy` might modify its own or your contract’s state in unexpected ways. For example, it could alter data that affects user balances or future interactions.
-     - **Contract Exploitation**: Malicious payloads might exploit vulnerabilities in the `exchangeProxy` contract. This could result in unauthorized access to functions or manipulation of contract permissions.
+
+**Impact**:
+- **Unauthorized ETH Transfers**: The execution of arbitrary code through `swapCallData` can result in unintended ETH transfers. An attacker could craft `swapCallData` to redirect ETH to their own address, potentially draining the project's ETH reserves. This vulnerability exposes the entire contract's ETH holdings to theft, posing a severe risk to the protocol and its users.
+
+- **State Manipulation**: The external contract invoked by `exchangeProxy` may alter its own or the calling contract's state in unforeseen ways. This could lead to unauthorized changes to user balances, critical configuration settings, or other sensitive data, compromising the integrity and security of the protocol. Such manipulation can cause widespread disruptions, affecting all users and transactions within the platform.
+
+- **Contract Exploitation**: Malicious actors can exploit vulnerabilities within the `exchangeProxy` contract, leveraging the arbitrary execution capabilities to gain unauthorized access to privileged functions or alter contract permissions. This could allow attackers to bypass security measures, execute restricted actions, or otherwise compromise the system's integrity, potentially leading to further financial losses or operational failures.
+
+
+**Protocols Affected by Similar Issues**:
+- **The DAO Hack (2016)**: This infamous incident exploited a recursive call vulnerability, allowing an attacker to drain approximately $60 million worth of ETH from the DAO smart contract. It underscored the importance of rigorous contract validation and secure coding practices.
+- **Parity Multisig Wallet Vulnerability (2017)**: A flaw in the Parity multisig wallet contract allowed an attacker to gain control over the wallet, resulting in the loss of over $30 million in ETH. The vulnerability was related to improper handling of external contract calls, highlighting the risks associated with such interactions.
+- **bZx Protocol (2020)**: The bZx protocol experienced multiple attacks due to vulnerabilities in how it handled external interactions, leading to significant financial losses. These incidents demonstrated the dangers of not properly securing external calls and the importance of thorough auditing.
+- **Spectra Finance (2024)**: On July 23, 2024, Spectra Finance suffered a $550K loss due to an arbitrary call vulnerability in their router contract. This flaw allowed an attacker to drain all tokens approved to the contract. More details can be found on [Spectra's Twitter update](https://x.com/spectra_finance/status/1815813300111786488) and the [BlockSec Explorer](https://app.blocksec.com/explorer/tx/eth/0x491cf8b2a5753fdbf3096b42e0a16bc109b957dc112d6537b1ed306e483d0744?line=7).
+
    - **Mitigation**: 
      - Use higher-level functions with well-defined interfaces to interact with external contracts. Ensure that the `exchangeProxy` address and the content of `swapCallData` are thoroughly vetted and validated before execution.
+
    - **PoC**: Demonstrate how a malicious contract could exploit the `_fillQuote` function to cause financial loss or contract manipulation.
+
      ```javascript
-     // Malicious contract to demonstrate potential misuse
-     contract Malicious {
-         uint public receivedAmount;
+    // SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
 
-         receive() external payable {
-             receivedAmount += msg.value;
-             // Simulate further malicious behavior, like sending ETH elsewhere or executing unwanted logic
-         }
+import "forge-std/Test.sol";
+import "../../src/PrelaunchPoints.sol";
+import "../../src/mock/MockERC20.sol";
 
-         function exploit() external pure returns (string memory) {
-             return "Exploited successfully";
-         }
-     }
+contract TestHelper is PrelaunchPoints {
+    constructor(
+        address _exchangeProxy,
+        address _wethAddress,
+        address[] memory _allowedTokens
+    ) PrelaunchPoints(_exchangeProxy, _wethAddress, _allowedTokens) {}
 
-     // Exploitation contract to trigger the malicious behavior
-     contract TestArbitrarySend {
-         PrelaunchPoints public prelaunchPoints;
-         Malicious public malicious;
+    // Expose the internal _fillQuote function for testing
+    function exposeFillQuote(
+        IERC20 _sellToken,
+        uint256 _amount,
+        bytes calldata _swapCallData
+    ) public {
+        _fillQuote(_sellToken, _amount, _swapCallData);
+    }
+}
 
-         constructor(address _prelaunchPoints, address _malicious) {
-             prelaunchPoints = PrelaunchPoints(_prelaunchPoints);
-             malicious = Malicious(_malicious);
-         }
 
-         function exploit() external {
-             bytes memory swapCallData = abi.encodeWithSignature("exploit()");
+contract TestArbitrarySend is Test {
+    TestHelper prelaunchPoints;
+    ERC20Token mockToken;
 
-             // Trigger the _fillQuote function with data that invokes the malicious contract
-             prelaunchPoints._fillQuote(IERC20(address(0)), 0, swapCallData);
+    address exchangeProxy = address(0x1234567890123456789012345678901234567890);
+    address wethAddress = address(0x1234567890123456789012345678901234567891);
+    address[] allowedTokens;
 
-             // Verify the exploit succeeded by checking the malicious contract's state
-             require(malicious.receivedAmount() > 0, "Exploit failed");
-         }
-     }
-     ```
-   - **Examples of Protocols Affected by Similar Issues**:
-     - **The DAO Hack (2016)**: Demonstrated how vulnerabilities in contract logic could be exploited to drain funds, highlighting the importance of rigorous contract validation.
-     - **Parity Multisig Wallet Vulnerability (2017)**: Exploited how improper handling of external contract calls led to the loss of funds.
-     - **bZx Protocol (2020)**: Showed how manipulation of external interactions could result in significant financial losses.
+    function setUp() public {
+        // Deploy the mock token
+        mockToken = new ERC20Token();
+        allowedTokens.push(address(mockToken));
+
+        // Add another valid token if needed
+        allowedTokens.push(address(0x1234567890123456789012345678901234567892)); // Replace with a valid token address
+
+        // Deploy the TestHelper contract with initial parameters
+        prelaunchPoints = new TestHelper(
+            exchangeProxy,
+            wethAddress,
+            allowedTokens
+        );
+
+        // Mint some mock tokens for testing
+        mockToken.mint(address(this), 1000 ether);
+    }
+
+    function testExploit() external {
+        uint256 amount = 1 ether; // Example amount to be used in the test
+
+        // Setup mock data for the swap call
+        bytes memory swapCallData = ""; // Replace with appropriate data if needed
+
+        // Approve the TestHelper contract to spend mock tokens
+        mockToken.approve(address(prelaunchPoints), amount);
+
+        // Record the initial ETH balance of the contract
+        uint256 initialBalance = address(prelaunchPoints).balance;
+
+        // Trigger the _fillQuote function using the TestHelper contract
+        prelaunchPoints.exposeFillQuote(mockToken, amount, swapCallData);
+
+        // Fetch the new ETH balance of the contract
+        uint256 newBalance = address(prelaunchPoints).balance;
+
+        // Assert that the balance has changed as expected
+        assertGt(newBalance, initialBalance, "ETH balance should increase after calling _fillQuote");
+
+        // Additional assertions as needed
+        // For example:
+        // - Verify the mock token balance of the contract has decreased
+        uint256 finalTokenBalance = mockToken.balanceOf(address(prelaunchPoints));
+        assertEq(finalTokenBalance, 1000 ether - amount, "Mock token balance should decrease after calling _fillQuote");
+
+        // If _fillQuote emits any events, assert that they were emitted correctly
+        // For example:
+        // emit EventName(arg1, arg2);
+        // assertEmitted(prelaunchPoints, "EventName", arg1, arg2);
+    }
+}
+ ```
+
 
 ### Medium-Risk Issues
 #### 1. **Uninitialized Local Variables (`uninitialized-local`)**
