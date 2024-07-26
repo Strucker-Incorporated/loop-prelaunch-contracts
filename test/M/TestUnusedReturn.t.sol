@@ -5,20 +5,14 @@ import "forge-std/Test.sol";
 import "../../src/PrelaunchPoints.sol";
 import "../../src/mock/MockERC20.sol";
 
-
-// Contract demonstrating failure due to unused return values
 contract TestUnusedReturn is Test {
     PrelaunchPoints prelaunchPoints;
-
     address exchangeProxy = address(0x1234567890123456789012345678901234567890);
     address wethAddress = address(0x1234567890123456789012345678901234567891);
     address[] allowedTokens;
 
     function setUp() public {
-        // Set up allowed tokens (you may need to deploy mock tokens if necessary)
-        allowedTokens.push(address(0x1234567890123456789012345678901234567892)); // Replace with a valid token address
-
-        // Deploy the mock token
+        // Deploy mock token
         ERC20Token mockToken = new ERC20Token();
         allowedTokens.push(address(mockToken));
 
@@ -30,11 +24,17 @@ contract TestUnusedReturn is Test {
         );
     }
 
-    function testFunction() external {
-        uint256 amount = 100;
-        address exchangeProxy = address(0x123);
+    function testClaim() external {
+        ERC20Token token = new ERC20Token();
+        token.mint(address(this), 1000 ether);
+        token.approve(address(prelaunchPoints), 1000 ether);
 
-        // Failing to handle return value
-        prelaunchPoints._sellToken.approve(exchangeProxy, amount);
+        // Lock token
+        prelaunchPoints.lock(address(token), 1000 ether, bytes32("testReferral"));
+
+        // Claim functionality
+        uint8 percentage = 100;
+        bytes memory data = abi.encodePacked(uint32(1), address(token));
+        prelaunchPoints.claim(address(token), percentage, PrelaunchPoints.Exchange.UniswapV3, data);
     }
 }

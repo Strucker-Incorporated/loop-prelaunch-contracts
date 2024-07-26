@@ -5,19 +5,14 @@ import "forge-std/Test.sol";
 import "../../src/PrelaunchPoints.sol";
 import "../../src/mock/MockERC20.sol";
 
-// Contract demonstrating uninitialized variables
 contract TestUninitialized is Test {
     PrelaunchPoints prelaunchPoints;
-
     address exchangeProxy = address(0x1234567890123456789012345678901234567890);
     address wethAddress = address(0x1234567890123456789012345678901234567891);
     address[] allowedTokens;
 
     function setUp() public {
-        // Set up allowed tokens (you may need to deploy mock tokens if necessary)
-        allowedTokens.push(address(0x1234567890123456789012345678901234567892)); // Replace with a valid token address
-
-        // Deploy the mock token
+        // Deploy mock token
         ERC20Token mockToken = new ERC20Token();
         allowedTokens.push(address(mockToken));
 
@@ -29,12 +24,20 @@ contract TestUninitialized is Test {
         );
     }
 
-    function testFunction() external {
-        address inputToken;
-        address outputToken;
-        uint256 inputTokenAmount;
+    function testLockETH() external {
+        bytes32 referral = bytes32("testReferral");
 
-        // Using the uninitialized variables
-        prelaunchPoints.someFunction(inputToken, outputToken, inputTokenAmount);
+        // Lock ETH with a referral
+        prelaunchPoints.lockETH{value: 1 ether}(referral);
+    }
+
+    function testLockToken() external {
+        bytes32 referral = bytes32("testReferral");
+        ERC20Token token = new ERC20Token();
+        token.mint(address(this), 1000 ether);
+
+        // Approve and lock token
+        token.approve(address(prelaunchPoints), 1000 ether);
+        prelaunchPoints.lock(address(token), 1000 ether, referral);
     }
 }
