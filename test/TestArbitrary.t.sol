@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "../../src/PrelaunchPoints.sol";
-import "../../src/mock/MockERC20.sol"; // Correct import path based on your contract structure
+import "../src/PrelaunchPoints.sol";
+import "../src/mock/MockERC20.sol"; // Correct import path based on your contract structure
 
 contract TestArbitrarySend is Test {
     PrelaunchPoints public prelaunchPoints;
