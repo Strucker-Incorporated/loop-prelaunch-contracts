@@ -1,5 +1,3 @@
-  
-
 ---
 
 # LoopFI Security Report For C4 Labs
@@ -139,166 +137,75 @@ IERC20(tokenIn).forceApprove(kyberRouter, 0);
 ```javascript
 
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity ^0.8.0;
 
-import  "forge-std/Test.sol";
+import "forge-std/Test.sol"; // Import the Forge testing library for unit tests
+import "../src/PrelaunchPoints.sol"; // Import the PrelaunchPoints contract to be tested
+import "../src/mock/MockERC20.sol"; // Import the MockERC20 contract for token mock-ups
 
-import  "../../src/PrelaunchPoints.sol";
+contract TestArbitraryETHExploit is Test {
+    // Declare state variables for contracts and addresses
+    PrelaunchPoints public prelaunchPoints;
+    MockERC20 public mockToken;
+    MockERC20 public WETH;
+    address public exchangeProxy = 0x01fd869eBC05D8aD3F65a978D0a1307D406Ce627; // Address for exchangeProxy, should be updated with the real address
 
-import  "../../src/mock/MockERC20.sol";
+    address[] public allowedTokens; // Array of allowed tokens for the PrelaunchPoints contract
 
- contract TestHelper is PrelaunchPoints {
+    function setUp() public {
+        // Deploy MockERC20 contracts for testing
+        mockToken = new MockERC20("Mock Token", "MTK");
+        WETH = new MockERC20("Wrapped ETH", "WETH");
 
-constructor(
+        // Mint initial token supply to this contract
+        mockToken.mint(address(this), 1000 * 10**18); // Mint 1000 tokens with 18 decimals
+        WETH.mint(address(this), 1000 * 10**18); // Mint 1000 WETH tokens with 18 decimals
 
-address _exchangeProxy,
+        // Add the deployed tokens to the allowedTokens array
+        allowedTokens.push(address(mockToken));
+        allowedTokens.push(address(WETH));
 
-address _wethAddress,
+        // Deploy the PrelaunchPoints contract with the mock and allowed tokens
+        prelaunchPoints = new PrelaunchPoints(
+            exchangeProxy,          // Address for the exchange proxy
+            address(WETH),          // Address for the WETH token
+            allowedTokens           // Array of allowed tokens
+        );
 
-address[] memory _allowedTokens
+        // Approve the PrelaunchPoints contract to spend the tokens on behalf of this contract
+        mockToken.approve(address(prelaunchPoints), 1000 * 10**18); // Allow PrelaunchPoints to spend mock tokens
+        WETH.approve(address(prelaunchPoints), 1000 * 10**18); // Allow PrelaunchPoints to spend WETH tokens
+    }
 
-) PrelaunchPoints(_exchangeProxy, _wethAddress, _allowedTokens) {}
-  
+    function testArbitraryETHExploit() public {
+        // Define the malicious swap data to exploit the vulnerability
+        bytes memory swapData = abi.encodeWithSignature(
+            "maliciousFunction(address,uint256)", // Function signature of the malicious function
+            address(this), // Attacker's address to receive funds
+            1 ether // Amount to withdraw (for demonstration purposes)
+        );
 
-// Expose the internal _fillQuote function for testing
+        // Call the _fillQuote function with the crafted swapData
+        (bool success, ) = address(prelaunchPoints).call(
+            abi.encodeWithSignature(
+                "_fillQuote(address,uint256,bytes)", // Function signature of _fillQuote
+                address(mockToken), // Address of the token being swapped
+                1000 * 10**18, // Amount of tokens to swap
+                swapData // Malicious data to execute
+            )
+        );
+        require(success, "Function call failed"); // Ensure the function call succeeded
 
-function  exposeFillQuote(
+        // Retrieve the token balances after the swap
+        uint256 postSwapTokenBalance = mockToken.balanceOf(address(this)); // Balance of mock tokens after the swap
+        uint256 postSwapWETHBalance = WETH.balanceOf(address(prelaunchPoints)); // Balance of WETH in PrelaunchPoints after the swap
 
-IERC20  _sellToken,
-
-uint256  _amount,
-
-bytes  calldata  _swapCallData
-
-) public {
-
-_fillQuote(_sellToken, _amount, _swapCallData);
-
+        // Assertions to verify the results of the exploit
+        assertEq(postSwapTokenBalance, 0, "Mock token balance should be zero after swap"); // Expect the token balance to be zero
+        assertTrue(postSwapWETHBalance > 0, "WETH balance of PrelaunchPoints should be greater than zero after swap"); // Expect the WETH balance to have increased
+    }
 }
 
-}
-
-  
-
-contract TestArbitrarySend is Test {
-
-TestHelper prelaunchPoints;
-
-ERC20Token mockToken;
-
-  
-
-address exchangeProxy =  address(0x1234567890123456789012345678901234567890);
-
-address wethAddress =  address(0x1234567890123456789012345678901234567891);
-
-address[] allowedTokens;
-
-  
-
-function  setUp() public {
-
-// Deploy the mock token
-
-mockToken =  new  ERC20Token();
-
-allowedTokens.push(address(mockToken));
-
-  
-
-// Add another valid token if needed
-
-allowedTokens.push(address(0x1234567890123456789012345678901234567892)); // Replace with a valid token address
-
-  
-
-// Deploy the TestHelper contract with initial parameters
-
-prelaunchPoints =  new  TestHelper(
-
-exchangeProxy,
-
-wethAddress,
-
-allowedTokens
-
-);
-
-  
-
-// Mint some mock tokens for testing
-
-mockToken.mint(address(this), 1000 ether);
-
-}
-
-  
-
-function  testExploit() external {
-
-uint256 amount =  1 ether; // Example amount to be used in the test
-
-  
-
-// Setup mock data for the swap call
-
-bytes memory swapCallData =  ""; // Replace with appropriate data if needed
-
-  
-
-// Approve the TestHelper contract to spend mock tokens
-
-mockToken.approve(address(prelaunchPoints), amount);
-
-  
-
-// Record the initial ETH balance of the contract
-
-uint256 initialBalance =  address(prelaunchPoints).balance;
-
-  
-
-// Trigger the _fillQuote function using the TestHelper contract
-
-prelaunchPoints.exposeFillQuote(mockToken, amount, swapCallData);
-
-  
-
-// Fetch the new ETH balance of the contract
-
-uint256 newBalance =  address(prelaunchPoints).balance;
-
-  
-
-// Assert that the balance has changed as expected
-
-assertGt(newBalance, initialBalance, "ETH balance should increase after calling _fillQuote");
-
-  
-
-// Additional assertions as needed
-
-// For example:
-
-// - Verify the mock token balance of the contract has decreased
-
-uint256 finalTokenBalance = mockToken.balanceOf(address(prelaunchPoints));
-
-assertEq(finalTokenBalance, 1000 ether - amount, "Mock token balance should decrease after calling _fillQuote");
-
-  
-
-// If _fillQuote emits any events, assert that they were emitted correctly
-
-// For example:
-
-// emit EventName(arg1, arg2);
-
-// assertEmitted(prelaunchPoints, "EventName", arg1, arg2);
-
-}
-
-}
 
 ```
 
@@ -344,15 +251,11 @@ contract TestUninitialized {
 
 PrelaunchPoints public prelaunchPoints;
 
-  
-
 constructor(address _prelaunchPoints) {
 
 prelaunchPoints =  PrelaunchPoints(_prelaunchPoints);
 
 }
-
-  
 
 function  testFunction() external {
 
@@ -363,11 +266,7 @@ address outputToken; // Uninitialized
 uint256 inputTokenAmount; // Uninitialized
 
   
-
-// Attempt to use the uninitialized variables
-
-// This could result in errors if the function requires valid input
-
+//  use the uninitialized variables
 prelaunchPoints.someFunction(inputToken, outputToken, inputTokenAmount);
 
 }
@@ -450,244 +349,7 @@ prelaunchPoints._sellToken.approve(exchangeProxy, amount);
 
 ```
 
--  **Real-World Example**:
 
--  **DAO Hack** (2016): Highlighted how ignoring the outcomes of critical operations can lead to significant losses. The failure to properly handle transaction outcomes contributed to the exploit that drained funds from the DAO.
-
-To elevate the "Unsafe ERC20 Operations" from low to medium risk, let's build out more detailed Proofs of Concept (PoCs) that illustrate their impact on functionality and security. These PoCs will help to showcase how ignoring the return values of ERC20 operations could lead to significant issues in the contract.
-
-  
-
-### Unsafe ERC20 Operations (`unsafe-erc20-operations`)
-
-  
-
--  **Description**: Lack of checks for ERC20 operations which could fail silently.
-
--  **Files and Lines**:
-
--  `src/PrelaunchPoints.sol` [Line: 235](src/PrelaunchPoints.sol#L235)
-
-```javascript
-
-lpETH.approve(address(lpETHVault), claimedAmount);
-
-```
-
--  `src/PrelaunchPoints.sol` [Line: 272](src/PrelaunchPoints.sol#L272)
-
-```javascript
-
-WETH.approve(address(lpETH), claimedAmount);
-
-```
-
--  `src/PrelaunchPoints.sol` [Line: 320](src/PrelaunchPoints.sol#L320)
-
-```javascript
-
-WETH.approve(address(lpETH), totalSupply);
-
-```
-
--  `src/PrelaunchPoints.sol` [Line: 508](src/PrelaunchPoints.sol#L508)
-
-```javascript
-
-if (!_sellToken.approve(exchangeProxy, _amount)) {
-
-```
-
-  
-
--  **Impact**:
-
-- Ignoring return values from `approve` calls can result in unexpected behavior or failed transactions if the approval fails, impacting contract functionality and leading to potential financial losses or disruptions.
-
-  
-
--  **Mitigation**:
-
-- Ensure that `approve` calls handle the returned boolean value properly and include appropriate error handling to address failures.
-
-  
-
--  **PoC**: Show potential failure in ERC20 operations due to unverified `approve` calls.
-
-  
-
-#### Proof of Concept for Unsafe ERC20 Operations
-
-  
-
-1.  **Contract with Unsafe ERC20 Operations**
-
-  
-
-This contract demonstrates how ignoring the return values of `approve` calls can lead to failed token transfers, which can disrupt the intended functionality.
-
-  
-
-```solidity
-
-// SPDX-License-Identifier: MIT
-
-pragma  solidity  ^0.8.0;
-
-  
-
-interface ERC20 {
-
-function  approve(address  spender, uint256  amount) external  returns (bool);
-
-}
-
-  
-
-contract TestERC20Operations {
-
-ERC20 public token;
-
-address  public spender;
-
-  
-
-constructor(address _token, address _spender) {
-
-token =  ERC20(_token);
-
-spender = _spender;
-
-}
-
-  
-
-function  testApprove() external {
-
-uint256 amount =  100;
-
-  
-
-// Ignoring the return value of approve, leading to potential silent failure
-
-token.approve(spender, amount);
-
-}
-
-}
-
-```
-
-  
-
-2.  **Malicious Contract to Exploit the Issue**
-
-  
-
-This malicious contract will try to exploit the `TestERC20Operations` contract by assuming that approvals are successful, which might not be the case if the return values are ignored.
-
-  
-
-```solidity
-
-// SPDX-License-Identifier: MIT
-
-pragma  solidity  ^0.8.0;
-
-  
-
-interface TestERC20Operations {
-
-function  testApprove() external;
-
-}
-
-  
-
-contract ExploitContract {
-
-TestERC20Operations public target;
-
-  
-
-constructor(address _target) {
-
-target =  TestERC20Operations(_target);
-
-}
-
-  
-
-function  exploit() external {
-
-// Call the function that has unsafe ERC20 operations
-
-target.testApprove();
-
-  
-
-// Here, we can try to perform actions that assume approval was successful
-
-// If the approval failed silently, these actions will fail
-
-}
-
-}
-
-```
-
-  
-
-**Explanation**:
-
-- The `TestERC20Operations` contract calls `approve` on an ERC20 token but ignores the return value.
-
-- The `ExploitContract` assumes that the approval was successful and attempts to perform actions based on that assumption.
-
-- If the approval failed silently, these subsequent actions will fail, demonstrating the impact of not handling return values properly.
-
-  
-
-3.  **Testing Scenario**
-
-  
-
-- Deploy the `ERC20` token contract with an appropriate `approve` method that fails under certain conditions.
-
-- Deploy the `TestERC20Operations` contract with this token and an address for the spender.
-
-- Deploy the `ExploitContract` with the address of the `TestERC20Operations` contract.
-
-- Call the `exploit` function from the `ExploitContract` to observe the failure of subsequent actions.
-
-  
-
-4.  **Mitigation**
-
-  
-
-- Modify the `TestERC20Operations` contract to handle the return value of `approve`:
-
-  
-
-```solidity
-
-function  testApprove() external {
-
-uint256 amount =  100;
-
-require(token.approve(spender, amount), "Approval failed");
-
-}
-
-```
-
-  
-
-- This ensures that the contract checks whether the approval succeeded and handles errors appropriately.
-
-  
-  
 
 ## Low-Risk Issues
 
