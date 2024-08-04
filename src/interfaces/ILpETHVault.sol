@@ -11,5 +11,9 @@ interface ILpETHVault is IERC20 {
      * @param onBehalfOf address for staking.
      * @param typeIndex lock type index determining lock period and rewards multiplier.
      */
-    function stake(uint256 amount, address onBehalfOf, uint256 typeIndex) external;
+    function stake(
+        uint256 amount,
+        address onBehalfOf,
+        uint256 typeIndex
+    ) external;
 }

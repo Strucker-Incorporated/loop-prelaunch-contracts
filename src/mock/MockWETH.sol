@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.20;
 
 contract MockWETH {
@@ -58,7 +59,11 @@ contract MockWETH {
         return transferFrom(msg.sender, dst, wad);
     }
 
-    function transferFrom(address src, address dst, uint256 wad) public returns (bool) {
+    function transferFrom(
+        address src,
+        address dst,
+        uint256 wad
+    ) public returns (bool) {
         require(balanceOf[src] >= wad);
 
         if (src != msg.sender && allowance[src][msg.sender] != (2 ** 256 - 1)) {

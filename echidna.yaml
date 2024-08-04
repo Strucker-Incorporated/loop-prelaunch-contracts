@@ -1,0 +1,9 @@
+# Configuration for Echidna analysis
+
+# Contract and source files for PrelaunchPoints
+contract: EchidnaPrelaunchPoints
+solc-args: "--optimize --optimize-runs 200"
+
+sources:
+  - src/PrelaunchPoints.sol
+  - test/PrelaunchPoints0x.echidna.sol
